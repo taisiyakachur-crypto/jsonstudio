@@ -66,6 +66,7 @@ export function defaultFormatState(): FormatTabState {
   return {
     input: '',
     indent: '2',
+    softMode: false,
   }
 }
 

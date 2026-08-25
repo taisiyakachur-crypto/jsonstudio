@@ -43,6 +43,7 @@ export interface ChartTabState {
 export interface FormatTabState {
   input: string
   indent: '2' | '4' | 'tab'
+  softMode: boolean
 }
 
 export type ToolState = {

@@ -8,7 +8,7 @@ import {
   loadTabContent,
   saveTabContent,
 } from '@/lib/tab-storage'
-import type { AnyTab, Tab, ToolType } from '@/types/tabs'
+import type { AnyTab, Tab, ToolState, ToolType } from '@/types/tabs'
 
 interface TabMeta {
   id: string
@@ -32,7 +32,7 @@ interface TabsState {
   renameTab: (id: string, title: string) => void
   reorderTabs: (fromIndex: number, toIndex: number) => void
   setActiveTab: (id: string) => void
-  updateTabState: (id: string, updater: (state: AnyTab['state']) => AnyTab['state']) => void
+  updateTabState: <T extends ToolType>(id: string, updater: (state: ToolState[T]) => ToolState[T]) => void
   forceSaveTabContent: (id: string) => Promise<void>
 }
 
@@ -130,14 +130,18 @@ export const useTabsStore = create<TabsState>()(
 
       setActiveTab: (id) => setState({ activeTabId: id }),
 
-      updateTabState: (id, updater) => {
+      updateTabState: <T extends ToolType>(id: string, updater: (state: ToolState[T]) => ToolState[T]) => {
         let updatedTab: AnyTab | undefined
         setState((s) => ({
           tabs: s.tabs.map((t) => {
             if (t.id !== id) return t
-            // Callers are expected to pass an updater matching this tab's own tool type;
-            // that per-tool contract isn't expressible in AnyTab's discriminated union.
-            const next = { ...t, state: updater(t.state), updatedAt: Date.now() } as AnyTab
+            // The type param T is supplied by the caller (e.g. updateTabState<'format'>(...))
+            // and isn't checked against this tab's actual type at runtime here.
+            const next = {
+              ...t,
+              state: updater(t.state as ToolState[T]),
+              updatedAt: Date.now(),
+            } as AnyTab
             updatedTab = next
             return next
           }),

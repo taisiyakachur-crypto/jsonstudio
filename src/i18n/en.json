@@ -71,5 +71,19 @@
   "format.rawPreviewTitle": "Preview (first {{lines}} lines)",
   "format.rawPreviewTruncatedNote": "Only the start of the file is shown here — the full document is still available to the worker for the tree, compare, table and chart.",
   "format.error": "Error: {{message}}",
-  "format.cancelled": "Load cancelled"
+  "format.cancelled": "Load cancelled",
+
+  "jsonInput.stats": "{{size}} · {{nodes}} nodes · depth {{depth}}",
+  "jsonInput.copied": "Copied to clipboard",
+  "jsonInput.formatError": "Can't format: JSON is invalid",
+  "jsonInput.pasteError": "Couldn't read the clipboard",
+  "jsonInput.clipboardEmpty": "Clipboard is empty",
+
+  "format.stats.title": "Document stats",
+  "format.stats.nodes": "Nodes",
+  "format.stats.depth": "Max depth",
+  "format.stats.uniqueKeys": "Unique keys ({{count}})",
+  "format.stats.largestBranches": "Largest branches",
+  "format.indent.title": "Indent",
+  "format.indent.tab": "Tab"
 }

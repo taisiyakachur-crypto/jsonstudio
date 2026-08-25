@@ -71,5 +71,19 @@
   "format.rawPreviewTitle": "Попередній перегляд (перші {{lines}} рядків)",
   "format.rawPreviewTruncatedNote": "Показано лише початок файлу — повний документ доступний воркеру для дерева, порівняння, таблиці й діаграми.",
   "format.error": "Помилка: {{message}}",
-  "format.cancelled": "Завантаження скасовано"
+  "format.cancelled": "Завантаження скасовано",
+
+  "jsonInput.stats": "{{size}} · {{nodes}} вузлів · глибина {{depth}}",
+  "jsonInput.copied": "Скопійовано в буфер",
+  "jsonInput.formatError": "Неможливо відформатувати: JSON недійсний",
+  "jsonInput.pasteError": "Не вдалося прочитати буфер обміну",
+  "jsonInput.clipboardEmpty": "Буфер обміну порожній",
+
+  "format.stats.title": "Статистика документа",
+  "format.stats.nodes": "Вузлів",
+  "format.stats.depth": "Максимальна глибина",
+  "format.stats.uniqueKeys": "Унікальні ключі ({{count}})",
+  "format.stats.largestBranches": "Найбільші гілки",
+  "format.indent.title": "Відступ",
+  "format.indent.tab": "Таб"
 }
