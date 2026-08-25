@@ -29,6 +29,13 @@ export interface TableTabState {
   rootPath: string
   flattenDepth: number
   hiddenColumns: string[]
+  columnOrder: string[]
+  pinFirstColumn: boolean
+  sortColumn: string | null
+  sortDir: 'asc' | 'desc'
+  search: string
+  columnFilters: Record<string, string>
+  pageSize: number
 }
 
 export interface ChartTabState {

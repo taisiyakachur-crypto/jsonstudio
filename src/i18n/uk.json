@@ -166,5 +166,32 @@
   "parse.action.sendToChart": "→ Діаграма",
   "parse.action.sendToFormat": "→ Формат",
   "parse.sentToast": "Відкрито нову вкладку «{{title}}»",
-  "parse.escapedCopiedToast": "Екранований рядок скопійовано"
+  "parse.escapedCopiedToast": "Екранований рядок скопійовано",
+
+  "pathPicker.searchPlaceholder": "Пошук шляху…",
+  "pathPicker.noMatches": "Нічого не знайдено",
+
+  "table.rootPath": "Корінь",
+  "table.flattenDepth": "Глибина flatten",
+  "table.search": "Пошук по таблиці…",
+  "table.columns": "Колонки",
+  "table.pinFirstColumn": "Закріпити першу колонку",
+  "table.empty": "Завантажте JSON, щоб побачити таблицю",
+  "table.notArray": "Обраний шлях не є масивом чи об'єктом",
+  "table.filteredRows": "{{filtered}} з {{total}} рядків",
+  "table.page": "Сторінка {{page}} з {{pages}}",
+  "table.pageSize": "Рядків на сторінці",
+  "table.prevPage": "Попередня",
+  "table.nextPage": "Наступна",
+  "table.noRows": "Немає рядків",
+  "table.cellPopupTitle": "Значення",
+  "table.export.json": "JSON",
+  "table.export.markdown": "Markdown",
+  "table.export.csv": "CSV",
+  "table.export.xlsx": "XLSX",
+  "table.column.filterPlaceholder": "Фільтр…",
+  "table.loadNew": "Завантажити інший файл",
+  "table.progress": "Оброблено {{loaded}} з {{total}}",
+  "table.cancelled": "Завантаження скасовано",
+  "table.error": "Помилка: {{message}}"
 }

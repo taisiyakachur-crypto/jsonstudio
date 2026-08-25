@@ -166,5 +166,32 @@
   "parse.action.sendToChart": "→ Chart",
   "parse.action.sendToFormat": "→ Format",
   "parse.sentToast": "Opened new tab \"{{title}}\"",
-  "parse.escapedCopiedToast": "Escaped string copied"
+  "parse.escapedCopiedToast": "Escaped string copied",
+
+  "pathPicker.searchPlaceholder": "Search path…",
+  "pathPicker.noMatches": "No matches",
+
+  "table.rootPath": "Root",
+  "table.flattenDepth": "Flatten depth",
+  "table.search": "Search table…",
+  "table.columns": "Columns",
+  "table.pinFirstColumn": "Pin first column",
+  "table.empty": "Load JSON to see the table",
+  "table.notArray": "Selected path is not an array or object",
+  "table.filteredRows": "{{filtered}} of {{total}} rows",
+  "table.page": "Page {{page}} of {{pages}}",
+  "table.pageSize": "Rows per page",
+  "table.prevPage": "Previous",
+  "table.nextPage": "Next",
+  "table.noRows": "No rows",
+  "table.cellPopupTitle": "Value",
+  "table.export.json": "JSON",
+  "table.export.markdown": "Markdown",
+  "table.export.csv": "CSV",
+  "table.export.xlsx": "XLSX",
+  "table.column.filterPlaceholder": "Filter…",
+  "table.loadNew": "Load another file",
+  "table.progress": "Processed {{loaded}} of {{total}}",
+  "table.cancelled": "Loading cancelled",
+  "table.error": "Error: {{message}}"
 }

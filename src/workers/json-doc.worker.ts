@@ -1,10 +1,10 @@
-import { JSONParser } from '@streamparser/json'
 import * as Comlink from 'comlink'
 import { STREAMING_SIZE_LIMIT_BYTES } from '@/lib/big-file'
 import type { DocMeta, JsonDocWorkerApi, JsonPathSegment, LoadProgress } from '@/types/json-doc'
 import { DOC_CANCELLED_ERROR_NAME } from '@/types/json-doc'
 import type { JsonValue } from '@/types/json'
 import { buildMeta, computeChildren } from './json-doc-logic'
+import { parseFileStreaming } from './shared/stream-parse-file'
 
 class DocCancelledError extends Error {
   constructor() {
@@ -38,71 +38,23 @@ async function openFileStreaming(
   file: File,
   onProgress: (progress: LoadProgress) => void,
 ): Promise<DocMeta> {
-  const total = file.size
-  let loaded = 0
-
-  const decoder = new TextDecoder()
-  const previewChunks: string[] = []
-  let previewChars = 0
-  const PREVIEW_COLLECT_CAP = 400_000
-
-  const parser = new JSONParser({ paths: ['$'], keepStack: true })
-  let rootValue: JsonValue | undefined
-  let parseError: Error | undefined
-  parser.onValue = ({ value, stack }) => {
-    if (stack.length === 0) rootValue = value as JsonValue
-  }
-  parser.onError = (err) => {
-    parseError = err
-  }
-
   cancelFlags.set(id, false)
-  const reader = file.stream().getReader()
-  // How often (in chunks) to yield to a macrotask so a `cancel` RPC -- which
-  // arrives as a postMessage, only handled between macrotasks -- can land. A
-  // microtask-only yield (`await Promise.resolve()`) never lets one in, but
-  // yielding via `setTimeout` on *every* chunk would slow the read down a lot
-  // (each chunk is tens of KB), so it's throttled instead of per-chunk.
-  const YIELD_EVERY_N_CHUNKS = 8
-  let chunksSinceYield = 0
   try {
-    for (;;) {
-      if (cancelFlags.get(id)) throw new DocCancelledError()
-
-      const { done, value: chunk } = await reader.read()
-      if (done) break
-
-      loaded += chunk.byteLength
-      if (previewChars < PREVIEW_COLLECT_CAP) {
-        const text = decoder.decode(chunk, { stream: true })
-        previewChunks.push(text)
-        previewChars += text.length
-      }
-      parser.write(chunk)
-      if (parseError) throw parseError
-      onProgress({ loadedBytes: loaded, totalBytes: total })
-
-      chunksSinceYield++
-      if (chunksSinceYield >= YIELD_EVERY_N_CHUNKS) {
-        chunksSinceYield = 0
-        await new Promise((resolve) => setTimeout(resolve, 0))
-      }
+    const { value, previewText } = await parseFileStreaming(
+      file,
+      onProgress,
+      () => cancelFlags.get(id) === true,
+    )
+    docs.set(id, value)
+    return buildMeta(id, value, file.size, previewText)
+  } catch (err) {
+    if (err instanceof Error && err.name === 'StreamParseCancelledError') {
+      throw new DocCancelledError()
     }
-    // With no `separator` configured, the parser already ends itself as soon as it
-    // sees the top-level value's closing bracket -- calling `.end()` again after
-    // that would hit its "already ended" guard and throw. Only end it here to
-    // surface the "half-parsed document" error for a truncated/invalid stream.
-    if (!parser.isEnded) parser.end()
+    throw err
   } finally {
-    reader.releaseLock()
     cancelFlags.delete(id)
   }
-
-  if (parseError) throw parseError
-  if (rootValue === undefined) throw new Error('Empty or invalid JSON stream')
-
-  docs.set(id, rootValue)
-  return buildMeta(id, rootValue, total, previewChunks.join(''))
 }
 
 async function openFile(

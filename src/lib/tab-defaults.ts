@@ -39,6 +39,13 @@ export function defaultTableState(): TableTabState {
     rootPath: '$',
     flattenDepth: 1,
     hiddenColumns: [],
+    columnOrder: [],
+    pinFirstColumn: false,
+    sortColumn: null,
+    sortDir: 'asc',
+    search: '',
+    columnFilters: {},
+    pageSize: 50,
   }
 }
 
