@@ -19,6 +19,9 @@ export function FileDropZone({
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault()
+    // Several callers wrap this in their own onDrop (for a page-wide "drop anywhere" overlay)
+    // -- without this, both handlers would fire for one drop and load the file twice.
+    e.stopPropagation()
     setDragOver(false)
     const file = e.dataTransfer.files[0]
     if (file) onFile(file)

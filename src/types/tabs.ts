@@ -48,10 +48,15 @@ export interface ChartTabState {
   groupBy: string
 }
 
+export type FormatSidebarTab = 'stats' | 'jsonpath' | 'schema' | 'typescript'
+
 export interface FormatTabState {
   input: string
   indent: '2' | '4' | 'tab'
   softMode: boolean
+  sidebarTab: FormatSidebarTab
+  jsonPathQuery: string
+  schemaInput: string
 }
 
 export type ToolState = {

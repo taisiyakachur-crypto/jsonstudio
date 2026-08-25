@@ -14,6 +14,7 @@ import { computeJsonStats, type JsonStats } from '@/lib/json-stats'
 import { sortJsonKeysDeep } from '@/lib/sort-json-keys'
 import { cn } from '@/lib/utils'
 import { validateJson } from '@/lib/validate-json'
+import type { JsonValue } from '@/types/json'
 import { JsonEditor } from './json-editor'
 import { JsonInputToolbar } from './json-input-toolbar'
 import { ValidityBar } from './validity-bar'
@@ -32,6 +33,8 @@ export interface JsonInputProps {
   onModeChange?: (mode: 'small' | 'big') => void
   /** Notified with the live document stats whenever the (debounced, valid) content changes. */
   onStatsChange?: (stats: JsonStats | null) => void
+  /** Notified with the live parsed value whenever the (debounced, valid) content changes. */
+  onValueChange?: (value: JsonValue | null) => void
   className?: string
 }
 
@@ -44,6 +47,7 @@ export function JsonInput({
   formatIndent = '2',
   onModeChange,
   onStatsChange,
+  onValueChange,
   className,
 }: JsonInputProps) {
   const { t, locale } = useTranslation()
@@ -68,6 +72,10 @@ export function JsonInput({
   useEffect(() => {
     onStatsChange?.(stats)
   }, [stats, onStatsChange])
+
+  useEffect(() => {
+    onValueChange?.(validation.valid && validation.value !== undefined ? validation.value : null)
+  }, [validation, onValueChange])
 
   async function loadFile(file: File) {
     if (file.size > EDITOR_SIZE_LIMIT_BYTES) {

@@ -88,6 +88,26 @@
   "format.indent.title": "Відступ",
   "format.indent.tab": "Таб",
 
+  "format.sidebar.stats": "Статистика",
+  "format.sidebar.jsonpath": "JSONPath",
+  "format.sidebar.schema": "Схема",
+  "format.sidebar.typescript": "TypeScript",
+  "format.sidebar.unavailable": "Доступно лише для невеликих файлів",
+
+  "format.jsonPath.placeholder": "$.store.book[*].title",
+  "format.jsonPath.resultCount": "Знайдено: {{count}}",
+  "format.jsonPath.empty": "Введіть JSONPath-вираз, щоб побачити результат",
+
+  "format.schema.generatedTitle": "Схема документа (draft-07)",
+  "format.schema.validateTitle": "Перевірити за іншою схемою",
+  "format.schema.validatePlaceholder": "Вставте JSON Schema…",
+  "format.schema.valid": "Документ відповідає схемі",
+  "format.schema.schemaError": "Помилка схеми: {{message}}",
+  "format.schema.export.json": "JSON",
+
+  "format.typescript.title": "TypeScript-інтерфейси",
+  "format.typescript.export.ts": "TS",
+
   "compare.options.title": "Опції порівняння",
   "compare.options.ignoreArrayOrder": "Ігнорувати порядок елементів у масивах",
   "compare.options.arrayKeyField": "Ключ для порівняння масивів об'єктів",

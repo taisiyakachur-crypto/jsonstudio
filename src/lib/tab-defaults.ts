@@ -66,6 +66,9 @@ export function defaultFormatState(): FormatTabState {
     input: '',
     indent: '2',
     softMode: false,
+    sidebarTab: 'stats',
+    jsonPathQuery: '',
+    schemaInput: '',
   }
 }
 

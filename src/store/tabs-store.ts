@@ -56,7 +56,12 @@ export const useTabsStore = create<TabsState>()(
         const loaded = await Promise.all(
           tabs.map(async (tab) => {
             const content = await loadTabContent<AnyTab['state']>(tab.id)
-            return content ? ({ ...tab, state: content } as AnyTab) : tab
+            // Shallow-merge over fresh defaults rather than replacing wholesale: a tab
+            // persisted before a later stage added new state fields would otherwise come
+            // back missing them (and any code assuming they exist would crash).
+            return content
+              ? ({ ...tab, state: { ...defaultStateFor(tab.type), ...content } } as AnyTab)
+              : tab
           }),
         )
         setState({ tabs: loaded, hydrated: true })

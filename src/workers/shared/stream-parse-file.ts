@@ -20,6 +20,12 @@ export interface StreamParseResult {
 }
 
 const YIELD_EVERY_N_CHUNKS = 8
+/** Comlink's `onProgress` is a real postMessage round-trip per call -- calling it on every
+ *  stream chunk (which can be large -- Chromium's File.stream() often yields chunks in the
+ *  hundreds of KB to low MB range, not a fixed small size) adds up needlessly for a UI element
+ *  that only needs to visibly update a few times a second. Throttling by time keeps the
+ *  progress bar just as live while cutting the RPC count. */
+const PROGRESS_THROTTLE_MS = 100
 
 /**
  * Streams a File's bytes into the JSON parser in chunks instead of blocking on one giant
@@ -53,6 +59,7 @@ export async function parseFileStreaming(
 
   const reader = file.stream().getReader()
   let chunksSinceYield = 0
+  let lastProgressAt = 0
   try {
     for (;;) {
       if (isCancelled()) throw new StreamParseCancelledError()
@@ -68,7 +75,12 @@ export async function parseFileStreaming(
       }
       parser.write(chunk)
       if (parseError) throw parseError
-      onProgress({ loadedBytes: loaded, totalBytes: total })
+
+      const now = performance.now()
+      if (now - lastProgressAt >= PROGRESS_THROTTLE_MS) {
+        lastProgressAt = now
+        onProgress({ loadedBytes: loaded, totalBytes: total })
+      }
 
       chunksSinceYield++
       if (chunksSinceYield >= YIELD_EVERY_N_CHUNKS) {
@@ -91,5 +103,6 @@ export async function parseFileStreaming(
   if (parseError) throw parseError
   if (rootValue === undefined) throw new Error('Empty or invalid JSON stream')
 
+  onProgress({ loadedBytes: loaded, totalBytes: total })
   return { value: rootValue, previewText: previewChunks.join('') }
 }

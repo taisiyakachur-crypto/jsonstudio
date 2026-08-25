@@ -88,6 +88,26 @@
   "format.indent.title": "Indent",
   "format.indent.tab": "Tab",
 
+  "format.sidebar.stats": "Stats",
+  "format.sidebar.jsonpath": "JSONPath",
+  "format.sidebar.schema": "Schema",
+  "format.sidebar.typescript": "TypeScript",
+  "format.sidebar.unavailable": "Only available for small files",
+
+  "format.jsonPath.placeholder": "$.store.book[*].title",
+  "format.jsonPath.resultCount": "Found: {{count}}",
+  "format.jsonPath.empty": "Enter a JSONPath expression to see the result",
+
+  "format.schema.generatedTitle": "Document schema (draft-07)",
+  "format.schema.validateTitle": "Validate against another schema",
+  "format.schema.validatePlaceholder": "Paste a JSON Schema…",
+  "format.schema.valid": "Document matches the schema",
+  "format.schema.schemaError": "Schema error: {{message}}",
+  "format.schema.export.json": "JSON",
+
+  "format.typescript.title": "TypeScript interfaces",
+  "format.typescript.export.ts": "TS",
+
   "compare.options.title": "Compare options",
   "compare.options.ignoreArrayOrder": "Ignore array element order",
   "compare.options.arrayKeyField": "Key for matching objects in arrays",
