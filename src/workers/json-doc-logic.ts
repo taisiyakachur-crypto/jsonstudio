@@ -1,4 +1,5 @@
 import { EDITOR_SIZE_LIMIT_BYTES, extractPreview } from '@/lib/big-file'
+import { previewJsonValue } from '@/lib/json-preview'
 import { isJsonArray, isJsonObject, jsonNodeType, type JsonValue } from '@/types/json'
 import type { ChildDescriptor, ChildPage, DocMeta, JsonPathSegment } from '@/types/json-doc'
 
@@ -35,18 +36,13 @@ export function resolvePath(root: JsonValue, path: JsonPathSegment[]): JsonValue
 export function describeValue(value: JsonValue): Omit<ChildDescriptor, 'key' | 'path'> {
   const type = jsonNodeType(value)
   if (isJsonArray(value)) {
-    return { type, hasChildren: value.length > 0, childCount: value.length, preview: `[${value.length}]` }
+    return { type, hasChildren: value.length > 0, childCount: value.length, preview: previewJsonValue(value) }
   }
   if (isJsonObject(value)) {
     const count = Object.keys(value).length
-    return { type, hasChildren: count > 0, childCount: count, preview: `{${count}}` }
+    return { type, hasChildren: count > 0, childCount: count, preview: previewJsonValue(value) }
   }
-  if (type === 'string') {
-    const s = value as string
-    const truncated = s.length > 120 ? `${s.slice(0, 120)}…` : s
-    return { type, hasChildren: false, childCount: null, preview: JSON.stringify(truncated) }
-  }
-  return { type, hasChildren: false, childCount: null, preview: JSON.stringify(value) }
+  return { type, hasChildren: false, childCount: null, preview: previewJsonValue(value) }
 }
 
 export function computeChildren(

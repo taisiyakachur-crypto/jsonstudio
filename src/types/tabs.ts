@@ -1,17 +1,18 @@
+import type { DiffOptions } from '@/lib/diff'
+
 /** The five tool kinds a tab can host. */
 export type ToolType = 'compare' | 'parse' | 'table' | 'chart' | 'format'
 
+export interface ComparePanelState {
+  id: string
+  title: string
+  text: string
+  softMode: boolean
+}
+
 export interface CompareTabState {
-  panels: Array<{ id: string; title: string; text: string }>
-  options: {
-    ignoreArrayOrder: boolean
-    arrayKeyField: string
-    ignoreCase: boolean
-    ignoredKeys: string[]
-    treatNullEmptyMissingAsEqual: boolean
-    numericTolerance: number
-    ignoreTypes: boolean
-  }
+  panels: ComparePanelState[]
+  options: DiffOptions
   view: 'side-by-side' | 'unified' | 'tree' | 'table'
   showOnlyDifferences: boolean
 }

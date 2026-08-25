@@ -1,3 +1,4 @@
+import { DEFAULT_DIFF_OPTIONS } from '@/lib/diff'
 import type {
   ChartTabState,
   CompareTabState,
@@ -15,18 +16,10 @@ function makeId(): string {
 export function defaultCompareState(): CompareTabState {
   return {
     panels: [
-      { id: makeId(), title: 'JSON 1', text: '' },
-      { id: makeId(), title: 'JSON 2', text: '' },
+      { id: makeId(), title: 'JSON 1', text: '', softMode: false },
+      { id: makeId(), title: 'JSON 2', text: '', softMode: false },
     ],
-    options: {
-      ignoreArrayOrder: false,
-      arrayKeyField: '',
-      ignoreCase: false,
-      ignoredKeys: [],
-      treatNullEmptyMissingAsEqual: false,
-      numericTolerance: 0,
-      ignoreTypes: false,
-    },
+    options: { ...DEFAULT_DIFF_OPTIONS },
     view: 'tree',
     showOnlyDifferences: false,
   }
