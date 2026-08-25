@@ -1,4 +1,5 @@
 import type { DiffOptions } from '@/lib/diff'
+import type { SourceFormat } from '@/lib/parsers/types'
 
 /** The five tool kinds a tab can host. */
 export type ToolType = 'compare' | 'parse' | 'table' | 'chart' | 'format'
@@ -19,8 +20,7 @@ export interface CompareTabState {
 
 export interface ParseTabState {
   input: string
-  sourceFormat: 'auto' | 'escaped-json' | 'log-json' | 'json5' | 'query-string' | 'key-value' | 'csv' | 'xml' | 'yaml' | 'ndjson' | 'base64' | 'jwt'
-  output: string
+  sourceFormat: SourceFormat
   csvDelimiter: string
 }
 

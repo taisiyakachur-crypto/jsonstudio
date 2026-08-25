@@ -15,33 +15,40 @@ export function JsonEditor({
   locale,
   autoFocus,
   onKeyDownCapture,
+  readOnly = false,
 }: {
   value: string
-  onChange: (value: string) => void
+  onChange?: (value: string) => void
   softMode: boolean
   locale: Locale
   autoFocus?: boolean
   onKeyDownCapture?: (e: React.KeyboardEvent) => void
+  /** Renders the value without an edit affordance or a linter pass (it's already-valid output). */
+  readOnly?: boolean
 }) {
   const theme = useResolvedTheme()
 
   const extensions = useMemo(
     () => [
       json(),
-      lintGutter(),
-      linter(
-        (view) => {
-          const text = view.state.doc.toString()
-          const result = validateJson(text, softMode, locale)
-          if (result.valid || !result.error) return []
-          const from = Math.max(0, Math.min(result.error.offset, text.length))
-          const to = Math.max(from + 1, Math.min(from + result.error.length, text.length))
-          return [{ from, to, severity: 'error' as const, message: result.error.message }]
-        },
-        { delay: LINT_DEBOUNCE_MS },
-      ),
+      ...(readOnly
+        ? []
+        : [
+            lintGutter(),
+            linter(
+              (view) => {
+                const text = view.state.doc.toString()
+                const result = validateJson(text, softMode, locale)
+                if (result.valid || !result.error) return []
+                const from = Math.max(0, Math.min(result.error.offset, text.length))
+                const to = Math.max(from + 1, Math.min(from + result.error.length, text.length))
+                return [{ from, to, severity: 'error' as const, message: result.error.message }]
+              },
+              { delay: LINT_DEBOUNCE_MS },
+            ),
+          ]),
     ],
-    [softMode, locale],
+    [softMode, locale, readOnly],
   )
 
   return (
@@ -53,6 +60,7 @@ export function JsonEditor({
         height="100%"
         extensions={extensions}
         autoFocus={autoFocus}
+        readOnly={readOnly}
         basicSetup={{ tabSize: 2 }}
         className="h-full text-sm"
       />

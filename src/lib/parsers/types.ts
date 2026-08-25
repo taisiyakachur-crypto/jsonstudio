@@ -1,0 +1,13 @@
+export type SourceFormat =
+  | 'auto'
+  | 'escaped-json'
+  | 'log-json'
+  | 'json5'
+  | 'query-string'
+  | 'key-value'
+  | 'csv'
+  | 'xml'
+  | 'yaml'
+  | 'ndjson'
+  | 'base64'
+  | 'jwt'

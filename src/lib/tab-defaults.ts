@@ -29,7 +29,6 @@ export function defaultParseState(): ParseTabState {
   return {
     input: '',
     sourceFormat: 'auto',
-    output: '',
     csvDelimiter: ',',
   }
 }
