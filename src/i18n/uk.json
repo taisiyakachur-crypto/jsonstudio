@@ -45,6 +45,8 @@
   "settings.theme.system": "Системна",
   "settings.language": "Мова",
 
+  "header.actions": "Дії",
+
   "commandPalette.placeholder": "Перехід до вкладки або команда...",
 
   "toast.tabRenamed": "Вкладку перейменовано",

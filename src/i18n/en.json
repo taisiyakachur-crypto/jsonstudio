@@ -45,6 +45,8 @@
   "settings.theme.system": "System",
   "settings.language": "Language",
 
+  "header.actions": "Actions",
+
   "commandPalette.placeholder": "Jump to a tab or run a command...",
 
   "toast.tabRenamed": "Tab renamed",

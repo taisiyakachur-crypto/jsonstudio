@@ -42,11 +42,18 @@ export function App() {
   return (
     <TooltipProvider delayDuration={300}>
       <div className="flex h-screen flex-col bg-background text-foreground">
-        <header className="flex h-11 shrink-0 items-center justify-between border-b border-border px-3">
-          <span className="text-sm font-semibold tracking-tight">JSON Studio</span>
-          <HeaderControls />
+        <header className="flex h-14 shrink-0 items-center gap-5 border-b border-border px-4">
+          <div className="flex shrink-0 items-center gap-2.5">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary font-mono text-[13px] font-semibold text-secondary-foreground">
+              {'{}'}
+            </span>
+            <span className="text-[15px] font-semibold tracking-tight">JSON Studio</span>
+          </div>
+          <TabBar />
+          <div className="ml-auto flex shrink-0 items-center">
+            <HeaderControls onOpenPalette={() => setPaletteOpen(true)} />
+          </div>
         </header>
-        <TabBar />
         <main className="flex flex-1 flex-col overflow-hidden">
           {activeTab ? <TabContent tab={activeTab} /> : <EmptyTabsPlaceholder />}
         </main>
