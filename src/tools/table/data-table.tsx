@@ -15,7 +15,7 @@ import type { FlatRow } from '@/lib/flatten'
 import { resolveColumnOrder, type ColumnMeta } from '@/lib/table-query'
 import { cn } from '@/lib/utils'
 import { isJsonArray, isJsonObject, type JsonValue } from '@/types/json'
-import { ColumnTypeBadge } from './column-type-badge'
+import { ColumnTypeBadge } from '@/components/column-type-badge'
 
 const COLUMN_WIDTH = 200
 const ROW_HEIGHT = 32
