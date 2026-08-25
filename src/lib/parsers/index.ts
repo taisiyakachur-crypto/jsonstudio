@@ -20,9 +20,11 @@ export { ParseInputError } from './errors'
 
 export interface ParseOptions {
   csvDelimiter: string
+  /** @default true */
+  csvCoerceTypes?: boolean
 }
 
-export const DEFAULT_PARSE_OPTIONS: ParseOptions = { csvDelimiter: ',' }
+export const DEFAULT_PARSE_OPTIONS: ParseOptions = { csvDelimiter: ',', csvCoerceTypes: true }
 
 export const SOURCE_FORMATS: Exclude<SourceFormat, 'auto'>[] = [
   'escaped-json',
@@ -58,7 +60,7 @@ export function parseByFormat(
     case 'key-value':
       return parseKeyValueLines(text)
     case 'csv':
-      return parseCsv(text, options.csvDelimiter || ',')
+      return parseCsv(text, options.csvDelimiter || ',', options.csvCoerceTypes ?? true)
     case 'xml':
       return parseXml(text)
     case 'yaml':

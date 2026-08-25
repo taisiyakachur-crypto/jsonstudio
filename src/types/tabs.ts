@@ -22,6 +22,7 @@ export interface ParseTabState {
   input: string
   sourceFormat: SourceFormat
   csvDelimiter: string
+  csvCoerceTypes: boolean
 }
 
 export interface TableTabState {

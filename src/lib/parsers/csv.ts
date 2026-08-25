@@ -64,7 +64,7 @@ function coerceCell(raw: string): JsonValue {
 }
 
 /** Parses CSV/TSV text (first row = headers) into an array of objects. */
-export function parseCsv(text: string, delimiter = ','): JsonValue {
+export function parseCsv(text: string, delimiter = ',', coerceTypes = true): JsonValue {
   const trimmed = text.replace(/^\uFEFF/, '')
   const rows = tokenizeDelimited(trimmed, delimiter).filter(
     (r) => !(r.length === 1 && r[0] === ''),
@@ -80,7 +80,8 @@ export function parseCsv(text: string, delimiter = ','): JsonValue {
   return dataRows.map((row) => {
     const obj: JsonObject = {}
     header.forEach((key, i) => {
-      obj[key.trim() || `column_${i + 1}`] = coerceCell(row[i] ?? '')
+      const cell = row[i] ?? ''
+      obj[key.trim() || `column_${i + 1}`] = coerceTypes ? coerceCell(cell) : cell
     })
     return obj
   })
