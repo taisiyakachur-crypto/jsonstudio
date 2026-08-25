@@ -8,26 +8,33 @@ import {
 import { ArrowDown, ArrowUp, GripVertical } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { FixedSizeList, type ListChildComponentProps } from 'react-window'
-import { Input } from '@/components/ui/input'
+import { ColumnTypeBadge } from '@/components/column-type-badge'
 import { useElementSize } from '@/hooks/use-element-size'
 import { useTranslation } from '@/i18n'
 import type { FlatRow } from '@/lib/flatten'
 import { resolveColumnOrder, type ColumnMeta } from '@/lib/table-query'
 import { cn } from '@/lib/utils'
 import { isJsonArray, isJsonObject, type JsonValue } from '@/types/json'
-import { ColumnTypeBadge } from '@/components/column-type-badge'
 
 const COLUMN_WIDTH = 200
-const ROW_HEIGHT = 32
-const HEADER_ROW_HEIGHT = 30
-const FILTER_ROW_HEIGHT = 30
+const ROW_HEIGHT = 36
+const HEADER_ROW_HEIGHT = 52
+const MAX_ARRAY_PREVIEW_ITEMS = 6
 
 const columnHelper = createColumnHelper<FlatRow>()
 
+/** A joined, comma-separated preview for arrays of primitives (e.g. `vip, beta`), falling back
+ *  to the generic `[n]`/`{n}` bracket format for arrays of objects/arrays. */
 function cellPreview(value: JsonValue | undefined): string {
   if (value === undefined || value === null) return ''
   if (typeof value === 'string') return value
-  if (isJsonArray(value)) return `[${value.length}]`
+  if (isJsonArray(value)) {
+    if (value.every((v) => v === null || typeof v !== 'object')) {
+      const items = value.slice(0, MAX_ARRAY_PREVIEW_ITEMS).map((v) => String(v))
+      return value.length > MAX_ARRAY_PREVIEW_ITEMS ? `${items.join(', ')}, …` : items.join(', ')
+    }
+    return `[${value.length}]`
+  }
   if (isJsonObject(value)) return `{${Object.keys(value).length}}`
   return String(value)
 }
@@ -42,8 +49,6 @@ export function DataTable({
   sortColumn,
   sortDir,
   onSortChange,
-  columnFilters,
-  onColumnFiltersChange,
   onCellClick,
   noRows,
 }: {
@@ -56,8 +61,6 @@ export function DataTable({
   sortColumn: string | null
   sortDir: 'asc' | 'desc'
   onSortChange: (column: string | null, dir: 'asc' | 'desc') => void
-  columnFilters: Record<string, string>
-  onColumnFiltersChange: (filters: Record<string, string>) => void
   onCellClick: (value: JsonValue) => void
   noRows: boolean
 }) {
@@ -144,13 +147,6 @@ export function DataTable({
     setDragKey(null)
   }
 
-  function setColumnFilter(key: string, value: string) {
-    const next = { ...columnFilters }
-    if (value === '') delete next[key]
-    else next[key] = value
-    onColumnFiltersChange(next)
-  }
-
   function HeaderCell({ colKey }: { colKey: string }) {
     const meta = columnsByKey.get(colKey)
     const column = table.getColumn(colKey)
@@ -161,32 +157,24 @@ export function DataTable({
         onDragStart={() => setDragKey(colKey)}
         onDragOver={(e) => e.preventDefault()}
         onDrop={() => handleDrop(colKey)}
-        className="flex shrink-0 items-center gap-1 border-r border-border/60 px-1.5 text-xs font-medium"
+        className="flex shrink-0 flex-col justify-center gap-0.5 border-r border-border/60 px-3.5"
         style={{ width: COLUMN_WIDTH }}
       >
-        <GripVertical className="h-3 w-3 shrink-0 cursor-grab text-muted-foreground/50" />
         <button
           onClick={column?.getToggleSortingHandler()}
-          className="flex min-w-0 flex-1 items-center gap-1 truncate text-left hover:text-foreground"
+          className="flex min-w-0 items-center gap-1 text-left text-[13px] font-medium hover:text-foreground"
         >
+          <GripVertical className="h-3 w-3 shrink-0 cursor-grab text-muted-foreground/50" />
           <span className="truncate">{colKey}</span>
-          {sorted === 'asc' && <ArrowUp className="h-3 w-3 shrink-0" />}
-          {sorted === 'desc' && <ArrowDown className="h-3 w-3 shrink-0" />}
+          {sorted === 'asc' && <ArrowUp className="h-3 w-3 shrink-0 text-primary" />}
+          {sorted === 'desc' && <ArrowDown className="h-3 w-3 shrink-0 text-primary" />}
         </button>
-        {meta && <ColumnTypeBadge type={meta.type} />}
-      </div>
-    )
-  }
-
-  function FilterCell({ colKey }: { colKey: string }) {
-    return (
-      <div className="shrink-0 px-1 py-0.5" style={{ width: COLUMN_WIDTH }}>
-        <Input
-          value={columnFilters[colKey] ?? ''}
-          onChange={(e) => setColumnFilter(colKey, e.target.value)}
-          placeholder={t('table.column.filterPlaceholder')}
-          className="h-6 px-1.5 text-xs"
-        />
+        {meta && (
+          <ColumnTypeBadge
+            type={meta.type}
+            className="ml-[18px] w-fit border-0 px-0 text-[10px] leading-3 tracking-wider"
+          />
+        )}
       </div>
     )
   }
@@ -194,17 +182,33 @@ export function DataTable({
   function BodyCell({ colKey, row }: { colKey: string; row: FlatRow }) {
     const value = row[colKey]
     const clickable = value !== undefined && value !== null && (isJsonObject(value) || isJsonArray(value))
+    const isBoolean = typeof value === 'boolean'
+
     return (
       <div
         onClick={() => clickable && onCellClick(value)}
-        className={cn(
-          'flex shrink-0 items-center truncate px-2 font-mono text-xs',
-          clickable && 'cursor-pointer text-primary hover:underline',
-        )}
+        className={cn('flex shrink-0 items-center truncate px-3.5 font-mono text-xs', clickable && 'cursor-pointer')}
         style={{ width: COLUMN_WIDTH, height: ROW_HEIGHT }}
         title={cellPreview(value)}
       >
-        {cellPreview(value)}
+        {value === undefined || value === null ? (
+          <span className="text-muted-foreground/40">—</span>
+        ) : isBoolean ? (
+          <span
+            className={cn(
+              'rounded-full px-2 py-0.5 text-[11px]',
+              value ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive',
+            )}
+          >
+            {String(value)}
+          </span>
+        ) : isJsonArray(value) ? (
+          <span className="truncate rounded-md bg-primary/10 px-2 py-0.5 text-[11px] text-primary">
+            {cellPreview(value)}
+          </span>
+        ) : (
+          <span className="truncate">{cellPreview(value)}</span>
+        )}
       </div>
     )
   }
@@ -221,7 +225,7 @@ export function DataTable({
     )
   }
 
-  const listHeight = height - HEADER_ROW_HEIGHT - FILTER_ROW_HEIGHT
+  const listHeight = height - HEADER_ROW_HEIGHT
   const scrollAreaWidth = width - (pinnedKey ? COLUMN_WIDTH : 0)
 
   return (
@@ -229,11 +233,8 @@ export function DataTable({
       <div className="flex min-h-0 flex-1 overflow-hidden">
         {pinnedKey && (
           <div className="flex shrink-0 flex-col border-r border-border">
-            <div style={{ height: HEADER_ROW_HEIGHT }} className="flex">
+            <div style={{ height: HEADER_ROW_HEIGHT }} className="flex bg-muted/30">
               <HeaderCell colKey={pinnedKey} />
-            </div>
-            <div style={{ height: FILTER_ROW_HEIGHT }} className="flex">
-              <FilterCell colKey={pinnedKey} />
             </div>
             <div ref={pinnedBodyRef} className="min-h-0 flex-1 overflow-hidden">
               <div style={{ height: rows.length * ROW_HEIGHT }}>
@@ -245,18 +246,11 @@ export function DataTable({
           </div>
         )}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div ref={headerRef} className="shrink-0 overflow-x-hidden border-b border-border">
-            <div style={{ width: scrollWidth }}>
-              <div className="flex" style={{ height: HEADER_ROW_HEIGHT }}>
-                {scrollKeys.map((key) => (
-                  <HeaderCell key={key} colKey={key} />
-                ))}
-              </div>
-              <div className="flex" style={{ height: FILTER_ROW_HEIGHT }}>
-                {scrollKeys.map((key) => (
-                  <FilterCell key={key} colKey={key} />
-                ))}
-              </div>
+          <div ref={headerRef} className="shrink-0 overflow-x-hidden border-b border-border bg-muted/30">
+            <div className="flex" style={{ width: scrollWidth, height: HEADER_ROW_HEIGHT }}>
+              {scrollKeys.map((key) => (
+                <HeaderCell key={key} colKey={key} />
+              ))}
             </div>
           </div>
           <div className="min-h-0 flex-1">

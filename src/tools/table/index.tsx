@@ -1,3 +1,4 @@
+import { Search, SlidersHorizontal } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import * as XLSX from 'xlsx'
@@ -5,7 +6,7 @@ import { FileDropZone } from '@/components/file-drop-zone'
 import { LoadProgressBar } from '@/components/load-progress-bar'
 import { PathPicker } from '@/components/path-picker'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Slider } from '@/components/ui/slider'
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { useTableDocument } from '@/hooks/use-table-document'
@@ -23,6 +24,8 @@ import { CellValuePopup } from './cell-value-popup'
 import { ColumnManager } from './column-manager'
 import { DataTable } from './data-table'
 import { TABLE_EXAMPLE_JSON } from './example'
+import { ExportMenu } from './export-menu'
+import { FilterChips } from './filter-chips'
 import { PaginationBar } from './pagination-bar'
 
 const QUERY_DEBOUNCE_MS = 300
@@ -224,50 +227,63 @@ export function TablePane({ tab }: { tab: Tab<'table'> }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border px-2 py-1.5">
-        <PathPicker paths={doc.paths} value={tab.state.rootPath} onChange={(v) => void onRootPathChange(v)} />
-        <div className="flex items-center gap-2">
-          <span className="whitespace-nowrap text-xs text-muted-foreground">
-            {t('table.flattenDepth')}: {tab.state.flattenDepth}
-          </span>
-          <Slider
-            className="w-24"
-            min={0}
-            max={6}
-            step={1}
-            value={[tab.state.flattenDepth]}
-            onValueChange={([v]) => void onFlattenDepthChange(v)}
+      <div className="flex shrink-0 flex-wrap items-center gap-2.5 px-4 pb-3 pt-3.5">
+        <PathPicker
+          paths={doc.paths}
+          value={tab.state.rootPath}
+          onChange={(v) => void onRootPathChange(v)}
+          className="h-[34px] rounded-lg"
+        />
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              title={t('table.flattenDepth')}
+              className="flex h-[34px] shrink-0 items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs text-muted-foreground hover:bg-accent"
+            >
+              <SlidersHorizontal className="h-3 w-3" />
+              {t('table.flattenDepth')}: {tab.state.flattenDepth}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-64 p-3">
+            <label className="mb-2 block text-xs text-muted-foreground">
+              {t('table.flattenDepth')}: {tab.state.flattenDepth}
+            </label>
+            <Slider
+              min={0}
+              max={6}
+              step={1}
+              value={[tab.state.flattenDepth]}
+              onValueChange={([v]) => void onFlattenDepthChange(v)}
+            />
+          </PopoverContent>
+        </Popover>
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={tab.state.search}
+            onChange={(e) => setState((s) => ({ ...s, search: e.target.value }))}
+            placeholder={t('table.search')}
+            className="h-[34px] w-[220px] rounded-lg border border-border bg-transparent pl-8 pr-3 text-xs outline-none placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring"
           />
         </div>
-        <Input
-          value={tab.state.search}
-          onChange={(e) => setState((s) => ({ ...s, search: e.target.value }))}
-          placeholder={t('table.search')}
-          className="h-8 w-48 text-xs"
-        />
-        <ColumnManager
+        <FilterChips
           columns={meta.columns}
-          hiddenColumns={tab.state.hiddenColumns}
-          onHiddenColumnsChange={(hidden) => setState((s) => ({ ...s, hiddenColumns: hidden }))}
-          pinFirstColumn={tab.state.pinFirstColumn}
-          onPinFirstColumnChange={(v) => setState((s) => ({ ...s, pinFirstColumn: v }))}
+          filters={tab.state.columnFilters}
+          onFiltersChange={(filters) => setState((s) => ({ ...s, columnFilters: filters }))}
         />
-        <span className="whitespace-nowrap text-xs text-muted-foreground">
-          {formatBytes(meta.byteSize, locale)} · {meta.totalRows}
-        </span>
-        <div className="ml-auto flex flex-wrap items-center gap-1">
-          <Button variant="ghost" size="sm" onClick={() => void exportAs('csv')}>
-            {t('table.export.csv')}
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => void exportAs('markdown')}>
-            {t('table.export.markdown')}
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => void exportAs('json')}>
-            {t('table.export.json')}
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => void exportXlsx()}>
-            {t('table.export.xlsx')}
-          </Button>
+        <div className="ml-auto flex flex-wrap items-center gap-2.5">
+          <ColumnManager
+            columns={meta.columns}
+            hiddenColumns={tab.state.hiddenColumns}
+            onHiddenColumnsChange={(hidden) => setState((s) => ({ ...s, hiddenColumns: hidden }))}
+            pinFirstColumn={tab.state.pinFirstColumn}
+            onPinFirstColumnChange={(v) => setState((s) => ({ ...s, pinFirstColumn: v }))}
+          />
+          <span className="whitespace-nowrap font-mono text-xs text-muted-foreground">
+            {t('table.filteredRows', { filtered: queryResult.totalFiltered, total: meta.totalRows })} ·{' '}
+            {formatBytes(meta.byteSize, locale)}
+          </span>
+          <ExportMenu onExport={(f) => void exportAs(f)} onExportXlsx={() => void exportXlsx()} />
           <Button variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()}>
             {t('table.loadNew')}
           </Button>
@@ -288,32 +304,32 @@ export function TablePane({ tab }: { tab: Tab<'table'> }) {
           {t('table.notArray')}
         </div>
       ) : (
-        <>
-          <DataTable
-            columns={meta.columns}
-            rows={queryResult.rows}
-            columnOrder={tab.state.columnOrder}
-            onColumnOrderChange={(order) => setState((s) => ({ ...s, columnOrder: order }))}
-            hiddenColumns={tab.state.hiddenColumns}
-            pinFirstColumn={tab.state.pinFirstColumn}
-            sortColumn={tab.state.sortColumn}
-            sortDir={tab.state.sortDir}
-            onSortChange={(column, dir) => setState((s) => ({ ...s, sortColumn: column, sortDir: dir }))}
-            columnFilters={tab.state.columnFilters}
-            onColumnFiltersChange={(filters) => setState((s) => ({ ...s, columnFilters: filters }))}
-            onCellClick={setCellValue}
-            noRows={queryResult.rows.length === 0}
-          />
-          <PaginationBar
-            page={page}
-            pageCount={pageCount}
-            totalFiltered={queryResult.totalFiltered}
-            totalRows={meta.totalRows}
-            pageSize={tab.state.pageSize}
-            onPageChange={setPage}
-            onPageSizeChange={(size) => setState((s) => ({ ...s, pageSize: size }))}
-          />
-        </>
+        <div className="min-h-0 flex-1 overflow-hidden px-4 pb-4">
+          <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl bg-card ring-1 ring-inset ring-border">
+            <DataTable
+              columns={meta.columns}
+              rows={queryResult.rows}
+              columnOrder={tab.state.columnOrder}
+              onColumnOrderChange={(order) => setState((s) => ({ ...s, columnOrder: order }))}
+              hiddenColumns={tab.state.hiddenColumns}
+              pinFirstColumn={tab.state.pinFirstColumn}
+              sortColumn={tab.state.sortColumn}
+              sortDir={tab.state.sortDir}
+              onSortChange={(column, dir) => setState((s) => ({ ...s, sortColumn: column, sortDir: dir }))}
+              onCellClick={setCellValue}
+              noRows={queryResult.rows.length === 0}
+            />
+            <PaginationBar
+              page={page}
+              pageCount={pageCount}
+              totalFiltered={queryResult.totalFiltered}
+              totalRows={meta.totalRows}
+              pageSize={tab.state.pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => setState((s) => ({ ...s, pageSize: size }))}
+            />
+          </div>
+        </div>
       )}
       <CellValuePopup value={cellValue} onClose={() => setCellValue(null)} />
     </div>
