@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222 20% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 20% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 20% 12%;
+
+    --primary: 222 80% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 16% 94%;
+    --secondary-foreground: 222 20% 16%;
+
+    --muted: 220 16% 94%;
+    --muted-foreground: 222 12% 42%;
+
+    --accent: 220 16% 92%;
+    --accent-foreground: 222 20% 16%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 65% 38%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 45%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 220 14% 88%;
+    --input: 220 14% 88%;
+    --ring: 222 80% 48%;
+
+    --diff-added: 142 60% 88%;
+    --diff-removed: 0 70% 90%;
+    --diff-changed: 42 90% 85%;
+    --diff-same: 220 10% 95%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222 24% 9%;
+    --foreground: 210 20% 92%;
+
+    --card: 222 22% 12%;
+    --card-foreground: 210 20% 92%;
+
+    --popover: 222 22% 11%;
+    --popover-foreground: 210 20% 92%;
+
+    --primary: 217 91% 65%;
+    --primary-foreground: 222 24% 9%;
+
+    --secondary: 222 18% 18%;
+    --secondary-foreground: 210 20% 92%;
+
+    --muted: 222 18% 16%;
+    --muted-foreground: 217 10% 65%;
+
+    --accent: 222 18% 20%;
+    --accent-foreground: 210 20% 92%;
+
+    --destructive: 0 63% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 50% 42%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 85% 50%;
+    --warning-foreground: 222 24% 9%;
+
+    --border: 222 16% 22%;
+    --input: 222 16% 22%;
+    --ring: 217 91% 65%;
+
+    --diff-added: 142 40% 20%;
+    --diff-removed: 0 45% 24%;
+    --diff-changed: 42 55% 24%;
+    --diff-same: 222 12% 16%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
