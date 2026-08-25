@@ -36,12 +36,31 @@ function cspMetaPlugin(): Plugin {
   }
 }
 
+/**
+ * GitHub Pages has no server-side rewrite, so a deep link (e.g. a refresh on a route other
+ * than `/`) 404s unless `404.html` exists and itself serves the app -- GitHub Pages falls
+ * back to it for any unknown path. A plain copy of `index.html` is enough here since this
+ * is a single-page app with no server-rendered routing to reproduce.
+ */
+function spa404FallbackPlugin(): Plugin {
+  return {
+    name: 'json-studio-spa-404-fallback',
+    apply: 'build',
+    async closeBundle() {
+      const fs = await import('node:fs/promises')
+      const outDir = path.resolve(__dirname, 'dist')
+      await fs.copyFile(path.join(outDir, 'index.html'), path.join(outDir, '404.html'))
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
   base: process.env.VITE_BASE_PATH ?? '/',
   plugins: [
     react(),
     cspMetaPlugin(),
+    spa404FallbackPlugin(),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
@@ -69,8 +88,11 @@ export default defineConfig(({ mode }) => ({
         display: 'standalone',
         background_color: '#0b0d12',
         theme_color: '#0b0d12',
-        // Icons added in stage 10 (PWA hardening).
-        icons: [],
+        icons: [
+          { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'icons/icon-512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
       },
     }),
   ],
