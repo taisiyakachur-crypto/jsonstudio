@@ -11,6 +11,7 @@ export function FieldMultiSelect({
   value,
   onChange,
   placeholder,
+  label,
   className,
 }: {
   fields: string[]
@@ -18,6 +19,8 @@ export function FieldMultiSelect({
   value: string[]
   onChange: (fields: string[]) => void
   placeholder: string
+  /** Short prefix shown before the value, e.g. "Y" -- matches the X-field/series pills. */
+  label?: string
   className?: string
 }) {
   function toggle(field: string, checked: boolean) {
@@ -33,7 +36,10 @@ export function FieldMultiSelect({
             className,
           )}
         >
-          <span className="truncate">{value.length > 0 ? value.join(', ') : placeholder}</span>
+          <span className="flex min-w-0 items-center gap-1.5">
+            {label && <span className="shrink-0 text-muted-foreground/70">{label}</span>}
+            <span className="truncate">{value.length > 0 ? value.join(', ') : placeholder}</span>
+          </span>
           <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         </button>
       </PopoverTrigger>

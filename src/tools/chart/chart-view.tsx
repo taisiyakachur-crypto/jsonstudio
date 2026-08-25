@@ -28,6 +28,15 @@ function colorFor(index: number): string {
 
 const AXIS_TICK = { fontSize: 12 }
 
+const TOOLTIP_CONTENT_STYLE = {
+  background: 'hsl(var(--popover))',
+  border: '1px solid hsl(var(--border))',
+  borderRadius: 8,
+  color: 'hsl(var(--popover-foreground))',
+  fontSize: 12,
+}
+const TOOLTIP_LABEL_STYLE = { color: 'hsl(var(--muted-foreground))' }
+
 export function ChartView({
   kind,
   data,
@@ -52,7 +61,7 @@ export function ChartView({
     return (
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
-          <Tooltip />
+          <Tooltip contentStyle={TOOLTIP_CONTENT_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} />
           <Legend />
           <Pie data={data} dataKey={valueKey} nameKey="x" outerRadius="75%" label>
             {data.map((_, i) => (
@@ -71,7 +80,7 @@ export function ChartView({
           <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
           <XAxis dataKey="x" type="category" tick={AXIS_TICK} allowDuplicatedCategory={false} />
           <YAxis type="number" tick={AXIS_TICK} />
-          <Tooltip />
+          <Tooltip contentStyle={TOOLTIP_CONTENT_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} />
           <Legend />
           {seriesKeys.map((key, i) => (
             <Scatter key={key} name={key} data={data} dataKey={key} fill={colorFor(i)} />
@@ -88,7 +97,7 @@ export function ChartView({
           <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
           <XAxis dataKey="x" tick={AXIS_TICK} />
           <YAxis tick={AXIS_TICK} />
-          <Tooltip />
+          <Tooltip contentStyle={TOOLTIP_CONTENT_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} />
           <Legend />
           {seriesKeys.map((key, i) => (
             <Line key={key} type="monotone" dataKey={key} stroke={colorFor(i)} dot={false} />
@@ -105,7 +114,7 @@ export function ChartView({
           <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
           <XAxis dataKey="x" tick={AXIS_TICK} />
           <YAxis tick={AXIS_TICK} />
-          <Tooltip />
+          <Tooltip contentStyle={TOOLTIP_CONTENT_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} />
           <Legend />
           {seriesKeys.map((key, i) => (
             <Area
@@ -128,7 +137,7 @@ export function ChartView({
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
         <XAxis dataKey="x" tick={AXIS_TICK} />
         <YAxis tick={AXIS_TICK} />
-        <Tooltip />
+        <Tooltip cursor={{ fill: 'hsl(var(--accent))' }} contentStyle={TOOLTIP_CONTENT_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} />
         <Legend />
         {seriesKeys.map((key, i) => (
           <Bar key={key} dataKey={key} fill={colorFor(i)} stackId={kind === 'bar-stacked' ? 'stack' : undefined} />
