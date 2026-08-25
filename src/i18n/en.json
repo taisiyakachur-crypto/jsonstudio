@@ -96,6 +96,15 @@
   "format.sidebar.typescript": "TypeScript",
   "format.sidebar.unavailable": "Only available for small files",
 
+  "format.input.label": "Input",
+  "format.output.label": "Result",
+  "format.output.empty": "Enter JSON to see the result",
+  "format.output.invalid": "Fix the JSON errors to see the result",
+  "format.view.code": "Code",
+  "format.view.tree": "Tree",
+  "format.advanced.trigger": "Schema · TS · JSONPath",
+  "format.meta": "{{size}} · {{nodes}} nodes",
+
   "format.jsonPath.placeholder": "$.store.book[*].title",
   "format.jsonPath.resultCount": "Found: {{count}}",
   "format.jsonPath.empty": "Enter a JSONPath expression to see the result",

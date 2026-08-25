@@ -96,6 +96,15 @@
   "format.sidebar.typescript": "TypeScript",
   "format.sidebar.unavailable": "Доступно лише для невеликих файлів",
 
+  "format.input.label": "Ввід",
+  "format.output.label": "Результат",
+  "format.output.empty": "Введіть JSON, щоб побачити результат",
+  "format.output.invalid": "Виправте помилки JSON, щоб побачити результат",
+  "format.view.code": "Код",
+  "format.view.tree": "Дерево",
+  "format.advanced.trigger": "Схема · TS · JSONPath",
+  "format.meta": "{{size}} · {{nodes}} вузлів",
+
   "format.jsonPath.placeholder": "$.store.book[*].title",
   "format.jsonPath.resultCount": "Знайдено: {{count}}",
   "format.jsonPath.empty": "Введіть JSONPath-вираз, щоб побачити результат",

@@ -1,26 +1,28 @@
 import { useState } from 'react'
-import { JsonInput } from '@/components/json-input'
+import { BigFileBanner } from '@/components/big-file-banner'
+import { JsonTree } from '@/components/json-tree'
+import { useJsonInputState } from '@/components/json-input/use-json-input-state'
+import { LoadProgressBar } from '@/components/load-progress-bar'
+import { Button } from '@/components/ui/button'
+import { useTranslation } from '@/i18n'
+import { formatBytes, PREVIEW_LINE_COUNT } from '@/lib/big-file'
 import { useTabsStore } from '@/store/tabs-store'
-import type { JsonStats } from '@/lib/json-stats'
-import type { JsonValue } from '@/types/json'
 import type { FormatSidebarTab, Tab } from '@/types/tabs'
 import { FORMAT_EXAMPLE_JSON } from './example'
-import { FormatSidebar } from './format-sidebar'
+import { FormatInputPanel } from './format-input-panel'
+import { FormatResultPanel, type ResultView } from './format-result-panel'
 
 export function FormatPane({ tab }: { tab: Tab<'format'> }) {
+  const { t, locale } = useTranslation()
   const updateTabState = useTabsStore((s) => s.updateTabState)
-  const [mode, setMode] = useState<'small' | 'big'>('small')
-  const [stats, setStats] = useState<JsonStats | null>(null)
-  const [value, setValue] = useState<JsonValue | null>(null)
+  const [resultView, setResultView] = useState<ResultView>('code')
+  const [advancedOpen, setAdvancedOpen] = useState(false)
 
   function setInput(input: string) {
     updateTabState<'format'>(tab.id, (s) => ({ ...s, input }))
   }
   function setSoftMode(softMode: boolean) {
     updateTabState<'format'>(tab.id, (s) => ({ ...s, softMode }))
-  }
-  function setIndent(indent: Tab<'format'>['state']['indent']) {
-    updateTabState<'format'>(tab.id, (s) => ({ ...s, indent }))
   }
   function setSidebarTab(sidebarTab: FormatSidebarTab) {
     updateTabState<'format'>(tab.id, (s) => ({ ...s, sidebarTab }))
@@ -32,34 +34,83 @@ export function FormatPane({ tab }: { tab: Tab<'format'> }) {
     updateTabState<'format'>(tab.id, (s) => ({ ...s, schemaInput }))
   }
 
+  const state = useJsonInputState({
+    value: tab.state.input,
+    onChange: setInput,
+    softMode: tab.state.softMode,
+    formatIndent: tab.state.indent,
+  })
+
+  if (state.bigActive) {
+    return (
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {state.bigDoc.status === 'loading' && (
+          <LoadProgressBar progress={state.bigDoc.progress} onCancel={state.bigDoc.cancel} />
+        )}
+        {(state.bigDoc.status === 'cancelled' || state.bigDoc.status === 'error') && (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
+            <p className="text-sm text-destructive">
+              {state.bigDoc.status === 'error'
+                ? t('format.error', { message: state.bigDoc.error ?? '' })
+                : t('format.cancelled')}
+            </p>
+            <Button variant="outline" size="sm" onClick={() => state.setBigActive(false)}>
+              {t('format.loadNew')}
+            </Button>
+          </div>
+        )}
+        {state.bigDoc.status === 'ready' && state.bigDoc.meta && (
+          <>
+            <BigFileBanner byteSize={state.bigDoc.meta.byteSize} />
+            <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2">
+              <span className="text-xs text-muted-foreground">
+                {formatBytes(state.bigDoc.meta.byteSize, locale)} · {state.bigDoc.meta.rootType} ·{' '}
+                {state.bigDoc.meta.rootChildCount ?? 0}
+              </span>
+              <Button variant="ghost" size="sm" onClick={() => state.setBigActive(false)}>
+                {t('format.loadNew')}
+              </Button>
+            </div>
+            <details className="shrink-0 border-b border-border">
+              <summary className="cursor-pointer px-3 py-2 text-xs text-muted-foreground">
+                {t('format.rawPreviewTitle', { lines: PREVIEW_LINE_COUNT })}
+              </summary>
+              <pre className="max-h-64 overflow-auto border-t border-border bg-muted/30 p-3 font-mono text-xs">
+                {state.bigDoc.meta.previewText}
+              </pre>
+            </details>
+            <JsonTree docId={state.bigDoc.meta.id} getChildren={state.bigDoc.getChildren} className="min-h-0 flex-1" />
+          </>
+        )}
+      </div>
+    )
+  }
+
   return (
-    <div className="flex flex-1 overflow-hidden">
-      <JsonInput
+    <div className="flex min-h-0 flex-1 overflow-hidden">
+      <FormatInputPanel
         value={tab.state.input}
         onChange={setInput}
         softMode={tab.state.softMode}
         onSoftModeChange={setSoftMode}
-        formatIndent={tab.state.indent}
-        onModeChange={setMode}
-        onStatsChange={setStats}
-        onValueChange={setValue}
         onLoadExample={() => setInput(FORMAT_EXAMPLE_JSON)}
-        className="min-w-0"
+        state={state}
       />
-      {mode === 'small' && (
-        <FormatSidebar
-          indent={tab.state.indent}
-          onIndentChange={setIndent}
-          stats={stats}
-          value={value}
-          sidebarTab={tab.state.sidebarTab}
-          onSidebarTabChange={setSidebarTab}
-          jsonPathQuery={tab.state.jsonPathQuery}
-          onJsonPathQueryChange={setJsonPathQuery}
-          schemaInput={tab.state.schemaInput}
-          onSchemaInputChange={setSchemaInput}
-        />
-      )}
+      <FormatResultPanel
+        rawValue={tab.state.input}
+        validation={state.validation}
+        stats={state.stats}
+        view={resultView}
+        onViewChange={setResultView}
+        advancedOpen={advancedOpen}
+        onAdvancedOpenChange={setAdvancedOpen}
+        advancedTab={tab.state.sidebarTab === 'stats' ? 'jsonpath' : tab.state.sidebarTab}
+        onAdvancedTabChange={setSidebarTab}
+        jsonPathQuery={tab.state.jsonPathQuery}
+        onJsonPathQueryChange={setJsonPathQuery}
+        schemaInput={tab.state.schemaInput}
+        onSchemaInputChange={setSchemaInput}
+      />
     </div>
   )
 }
