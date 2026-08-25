@@ -12,6 +12,7 @@ dist
 dist-ssr
 dev-dist
 coverage
+scripts/fixtures
 *.local
 
 # Editor directories and files

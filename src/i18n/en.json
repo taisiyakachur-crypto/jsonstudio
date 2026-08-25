@@ -50,5 +50,26 @@
   "toast.tabRenamed": "Tab renamed",
   "toast.contentTooLarge": "Content not saved, file too large",
   "toast.forceSave": "Save anyway",
-  "toast.saved": "Saved"
+  "toast.saved": "Saved",
+
+  "common.cancel": "Cancel",
+
+  "bigFile.banner": "Large file ({{size}}) — editing disabled, preview, compare, table and chart are still available.",
+  "bigFile.progress": "Processed {{loaded}} of {{total}}",
+  "bigFile.starting": "Starting to read the file…",
+
+  "jsonTree.loading": "Loading tree…",
+  "jsonTree.empty": "Empty",
+  "jsonTree.copyPath": "Copy path",
+  "jsonTree.pathCopied": "Path copied",
+  "jsonTree.loadMore": "Load more ({{count}})",
+
+  "format.loadNew": "Load another file",
+  "format.summaryObject": "{{size}} · object · {{count}} keys",
+  "format.summaryArray": "{{size}} · array · {{count}} items",
+  "format.summaryScalar": "{{size}} · {{type}}",
+  "format.rawPreviewTitle": "Preview (first {{lines}} lines)",
+  "format.rawPreviewTruncatedNote": "Only the start of the file is shown here — the full document is still available to the worker for the tree, compare, table and chart.",
+  "format.error": "Error: {{message}}",
+  "format.cancelled": "Load cancelled"
 }

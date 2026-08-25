@@ -50,5 +50,26 @@
   "toast.tabRenamed": "Вкладку перейменовано",
   "toast.contentTooLarge": "Вміст не збережено, завеликий файл",
   "toast.forceSave": "Зберегти примусово",
-  "toast.saved": "Збережено"
+  "toast.saved": "Збережено",
+
+  "common.cancel": "Скасувати",
+
+  "bigFile.banner": "Великий файл ({{size}}) — редагування вимкнено, доступні перегляд, порівняння, таблиця, діаграма.",
+  "bigFile.progress": "Оброблено {{loaded}} з {{total}}",
+  "bigFile.starting": "Починаємо читання файлу…",
+
+  "jsonTree.loading": "Завантаження дерева…",
+  "jsonTree.empty": "Порожньо",
+  "jsonTree.copyPath": "Копіювати шлях",
+  "jsonTree.pathCopied": "Шлях скопійовано",
+  "jsonTree.loadMore": "Завантажити ще ({{count}})",
+
+  "format.loadNew": "Завантажити інший файл",
+  "format.summaryObject": "{{size}} · об'єкт · {{count}} ключів",
+  "format.summaryArray": "{{size}} · масив · {{count}} елементів",
+  "format.summaryScalar": "{{size}} · {{type}}",
+  "format.rawPreviewTitle": "Попередній перегляд (перші {{lines}} рядків)",
+  "format.rawPreviewTruncatedNote": "Показано лише початок файлу — повний документ доступний воркеру для дерева, порівняння, таблиці й діаграми.",
+  "format.error": "Помилка: {{message}}",
+  "format.cancelled": "Завантаження скасовано"
 }

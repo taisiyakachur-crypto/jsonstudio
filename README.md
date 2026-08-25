@@ -23,11 +23,12 @@ npm run dev
 Інші команди:
 
 ```bash
-npm run build      # продакшн-збірка у dist/
-npm run preview    # локальний перегляд зібраного dist/
-npm run test        # юніт-тести (Vitest)
-npm run lint        # ESLint
-npm run format      # Prettier
+npm run build         # продакшн-збірка у dist/
+npm run preview       # локальний перегляд зібраного dist/
+npm run test           # юніт-тести (Vitest)
+npm run lint           # ESLint
+npm run format         # Prettier
+npm run gen:fixtures   # згенерувати тестові JSON-файли 5/20/50 МБ у scripts/fixtures/
 ```
 
 ## Стан проєкту
@@ -35,8 +36,14 @@ npm run format      # Prettier
 - [x] Етап 1 — каркас: Vite/React/TS/Tailwind/shadcn, система вкладок з IndexedDB
       (`idb-keyval`) + localStorage (метадані), теми світла/темна, i18n uk/en,
       заглушки для всіх п'яти інструментів (Compare, Parse, Table, Chart, Format & Validate).
-- [ ] Етап 2 — інфраструктура великих файлів (Comlink-воркери, потокове читання,
-      режим великого файлу, віртуалізоване дерево).
+- [x] Етап 2 — інфраструктура великих файлів: Comlink-воркер (`src/workers/json-doc.worker.ts`)
+      парсить JSON і віддає лише запитані гілки дерева, а не весь документ; файли > 20 МБ
+      читаються порціями через `@streamparser/json` з прогрес-баром і робочим скасуванням;
+      документи > 2 МБ показують банер «великий файл» + read-only перегляд перших ~2000
+      рядків; віртуалізоване (`react-window`) дерево `JsonTree` довантажує дочірні вузли
+      лише на розгортання/«завантажити ще». Скрипт `scripts/generate-fixtures.ts` генерує
+      тестові файли на 5/20/50 МБ. Перевірено вручну: дерево 50 МБ відкривається (~1.5 с
+      на цій машині) і плавно скролиться; повний бюджет продуктивності — етап 9.
 - [ ] Етапи 3–10 — див. технічне завдання.
 
 ## Приватність
