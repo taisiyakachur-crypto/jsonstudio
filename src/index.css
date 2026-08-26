@@ -3,102 +3,107 @@
 @tailwind utilities;
 
 @layer base {
+  /* Nocturne — light theme. Same accent family (hue ~249, the product's blurple) as the
+     dark theme below, darkened for AA contrast on a light ground rather than lightened. */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222 20% 12%;
+    --background: 245 100% 98%;
+    --foreground: 225 9% 18%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 20% 12%;
+    --card-foreground: 225 9% 18%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 20% 12%;
+    --popover-foreground: 225 9% 18%;
 
-    --primary: 222 80% 48%;
+    --primary: 250 29% 45%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 16% 94%;
-    --secondary-foreground: 222 20% 16%;
+    --secondary: 245 93% 95%;
+    --secondary-foreground: 250 29% 32%;
 
-    --muted: 220 16% 94%;
-    --muted-foreground: 222 12% 42%;
+    --muted: 229 46% 93%;
+    --muted-foreground: 230 12% 62%;
 
-    --accent: 220 16% 92%;
-    --accent-foreground: 222 20% 16%;
+    --accent: 229 46% 93%;
+    --accent-foreground: 225 9% 18%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 350 89% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 65% 38%;
+    --success: 160 65% 32%;
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 45%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 220 14% 88%;
-    --input: 220 14% 88%;
-    --ring: 222 80% 48%;
+    --border: 229 30% 85%;
+    --input: 229 30% 85%;
+    --ring: 250 29% 45%;
 
-    --diff-added: 142 60% 88%;
-    --diff-removed: 0 70% 90%;
-    --diff-changed: 42 90% 85%;
-    --diff-same: 220 10% 95%;
+    --diff-added: 160 60% 88%;
+    --diff-removed: 350 70% 90%;
+    --diff-changed: 38 90% 85%;
+    --diff-same: 229 10% 95%;
 
-    --chart-1: 222 80% 48%;
-    --chart-2: 142 65% 38%;
+    --chart-1: 250 29% 45%;
+    --chart-2: 160 65% 32%;
     --chart-3: 38 92% 45%;
-    --chart-4: 271 65% 55%;
-    --chart-5: 0 72% 51%;
-    --chart-6: 192 75% 40%;
+    --chart-4: 205 70% 45%;
+    --chart-5: 350 89% 55%;
+    --chart-6: 268 50% 55%;
 
     --radius: 0.5rem;
   }
 
+  /* Nocturne — dark theme (the design system's primary/reference mode). Two surface levels
+     above the background: --card is the "well" tone used for input/output panels and table
+     bodies (#1b1e2c), --popover is the further-elevated tone for menus/dialogs (#232532). */
   .dark {
-    --background: 222 24% 9%;
-    --foreground: 210 20% 92%;
+    --background: 232 27% 12%;
+    --foreground: 240 10% 92%;
 
-    --card: 222 22% 12%;
-    --card-foreground: 210 20% 92%;
+    --card: 229 24% 14%;
+    --card-foreground: 240 10% 92%;
 
-    --popover: 222 22% 11%;
-    --popover-foreground: 210 20% 92%;
+    --popover: 232 18% 17%;
+    --popover-foreground: 240 10% 92%;
 
-    --primary: 217 91% 65%;
-    --primary-foreground: 222 24% 9%;
+    --primary: 249 53% 68%;
+    --primary-foreground: 232 27% 12%;
 
-    --secondary: 222 18% 18%;
-    --secondary-foreground: 210 20% 92%;
+    --secondary: 249 25% 20%;
+    --secondary-foreground: 245 92% 90%;
 
-    --muted: 222 18% 16%;
-    --muted-foreground: 217 10% 65%;
+    --muted: 233 19% 16%;
+    --muted-foreground: 234 4% 56%;
 
-    --accent: 222 18% 20%;
-    --accent-foreground: 210 20% 92%;
+    --accent: 232 18% 17%;
+    --accent-foreground: 240 10% 92%;
 
-    --destructive: 0 63% 45%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 350 89% 60%;
+    --destructive-foreground: 240 10% 92%;
 
-    --success: 142 50% 42%;
+    --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 85% 50%;
-    --warning-foreground: 222 24% 9%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 232 27% 12%;
 
-    --border: 222 16% 22%;
-    --input: 222 16% 22%;
-    --ring: 217 91% 65%;
+    --border: 233 11% 25%;
+    --input: 233 11% 25%;
+    --ring: 249 53% 68%;
 
-    --diff-added: 142 40% 20%;
-    --diff-removed: 0 45% 24%;
-    --diff-changed: 42 55% 24%;
-    --diff-same: 222 12% 16%;
+    --diff-added: 160 40% 20%;
+    --diff-removed: 350 45% 24%;
+    --diff-changed: 38 55% 24%;
+    --diff-same: 232 12% 16%;
 
-    --chart-1: 217 91% 65%;
-    --chart-2: 142 50% 48%;
-    --chart-3: 38 85% 55%;
-    --chart-4: 271 60% 68%;
-    --chart-5: 0 63% 60%;
-    --chart-6: 192 70% 55%;
+    --chart-1: 249 53% 68%;
+    --chart-2: 160 84% 39%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 205 76% 75%;
+    --chart-5: 350 89% 60%;
+    --chart-6: 268 71% 80%;
   }
 
   * {
@@ -106,7 +111,7 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased font-sans;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 }

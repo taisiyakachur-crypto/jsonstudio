@@ -8,7 +8,7 @@ import { TOOL_TITLES } from '@/lib/tab-defaults'
 import { useTabsStore } from '@/store/tabs-store'
 import type { Tab } from '@/types/tabs'
 import { PARSE_EXAMPLES } from './example'
-import { FormatSelector } from './format-selector'
+import { ParseFormatCard } from './parse-format-card'
 import { ParseOutput } from './parse-output'
 import { RawTextInput } from './raw-text-input'
 
@@ -30,13 +30,25 @@ export function ParsePane({ tab }: { tab: Tab<'parse'> }) {
     try {
       const value = parseByFormat(debouncedInput, tab.state.sourceFormat, {
         csvDelimiter: tab.state.csvDelimiter,
+        csvCoerceTypes: tab.state.csvCoerceTypes,
       })
       return { value, error: null }
     } catch (err) {
       const message = err instanceof ParseInputError ? err.message : (err as Error).message
       return { value: null, error: message }
     }
-  }, [debouncedInput, tab.state.sourceFormat, tab.state.csvDelimiter])
+  }, [debouncedInput, tab.state.sourceFormat, tab.state.csvDelimiter, tab.state.csvCoerceTypes])
+
+  const effectiveFormat = tab.state.sourceFormat === 'auto' ? detectedFormat : tab.state.sourceFormat
+  const columnCount =
+    effectiveFormat === 'csv' &&
+    Array.isArray(parseResult.value) &&
+    parseResult.value.length > 0 &&
+    typeof parseResult.value[0] === 'object' &&
+    parseResult.value[0] !== null &&
+    !Array.isArray(parseResult.value[0])
+      ? Object.keys(parseResult.value[0]).length
+      : undefined
 
   function setInput(input: string) {
     updateTabState<'parse'>(tab.id, (s) => ({ ...s, input }))
@@ -46,6 +58,9 @@ export function ParsePane({ tab }: { tab: Tab<'parse'> }) {
   }
   function setCsvDelimiter(csvDelimiter: string) {
     updateTabState<'parse'>(tab.id, (s) => ({ ...s, csvDelimiter }))
+  }
+  function setCsvCoerceTypes(csvCoerceTypes: boolean) {
+    updateTabState<'parse'>(tab.id, (s) => ({ ...s, csvCoerceTypes }))
   }
 
   function loadExample() {
@@ -79,28 +94,27 @@ export function ParsePane({ tab }: { tab: Tab<'parse'> }) {
 
   return (
     <div className="flex flex-1 overflow-hidden">
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden border-r border-border">
-        <FormatSelector
+      <div className="flex w-[420px] shrink-0 flex-col gap-3 overflow-hidden border-r border-border p-3.5">
+        <ParseFormatCard
           sourceFormat={tab.state.sourceFormat}
           detectedFormat={detectedFormat}
           onSourceFormatChange={setSourceFormat}
           csvDelimiter={tab.state.csvDelimiter}
           onCsvDelimiterChange={setCsvDelimiter}
+          columnCount={columnCount}
         />
-        <RawTextInput value={tab.state.input} onChange={setInput} onLoadExample={loadExample} className="min-h-0" />
+        <RawTextInput value={tab.state.input} onChange={setInput} onLoadExample={loadExample} />
       </div>
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="shrink-0 border-b border-border px-3 py-2 text-xs font-medium text-muted-foreground">
-          {t('parse.output.title')}
-        </div>
-        <ParseOutput
-          value={parseResult.value}
-          error={parseResult.error}
-          minified={minified}
-          onMinifiedChange={setMinified}
-          onSendTo={sendTo}
-        />
-      </div>
+      <ParseOutput
+        value={parseResult.value}
+        error={parseResult.error}
+        minified={minified}
+        onMinifiedChange={setMinified}
+        onSendTo={sendTo}
+        showCoerceTypes={effectiveFormat === 'csv'}
+        coerceTypes={tab.state.csvCoerceTypes}
+        onCoerceTypesChange={setCsvCoerceTypes}
+      />
     </div>
   )
 }

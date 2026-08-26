@@ -1,7 +1,6 @@
 import { Plus } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ExportBar, type ExportFormat } from '@/components/export-bar'
-import { Button } from '@/components/ui/button'
 import { useDiff } from '@/hooks/use-diff'
 import { useNWayDiff } from '@/hooks/use-n-way-diff'
 import { useTranslation } from '@/i18n'
@@ -11,7 +10,8 @@ import { exportDiffToCsv, exportDiffToMarkdown, nWayRowsToExportable } from '@/l
 import { validateJson } from '@/lib/validate-json'
 import { useTabsStore } from '@/store/tabs-store'
 import type { CompareTabState, ComparePanelState, Tab } from '@/types/tabs'
-import { ComparePanel } from './compare-panel'
+import { CompareEditDialog } from './compare-edit-dialog'
+import { CompareSourceChip } from './compare-source-chip'
 import { DiffOptionsPanel } from './diff-options-panel'
 import { DiffSummaryBar, type CompareView, type SummaryStat } from './diff-summary-bar'
 import { DiffTableView } from './diff-table-view'
@@ -36,6 +36,7 @@ export function ComparePane({ tab }: { tab: Tab<'compare'> }) {
 
   const panels = tab.state.panels
   const [panelModes, setPanelModes] = useState<Array<'small' | 'big'>>(() => panels.map(() => 'small'))
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
 
   function updatePanel(index: number, patch: Partial<ComparePanelState>) {
     updateTabState<'compare'>(tab.id, (s) => ({
@@ -46,8 +47,10 @@ export function ComparePane({ tab }: { tab: Tab<'compare'> }) {
 
   function addPanel() {
     if (panels.length >= MAX_PANELS) return
+    const newIndex = panels.length
     updateTabState<'compare'>(tab.id, (s) => ({ ...s, panels: [...s.panels, makePanel(s.panels.length)] }))
     setPanelModes((m) => [...m, 'small'])
+    setEditingIndex(newIndex)
   }
 
   function removePanel(index: number) {
@@ -65,6 +68,19 @@ export function ComparePane({ tab }: { tab: Tab<'compare'> }) {
   function setShowOnlyDifferences(value: boolean) {
     updateTabState<'compare'>(tab.id, (s) => ({ ...s, showOnlyDifferences: value }))
   }
+
+  // Memoized (rather than inline in JSX): JsonInput's onModeChange feeds a useEffect there, so a
+  // callback that's a new reference every render would re-fire that effect every render too --
+  // each firing updates state, which triggers a re-render, which creates a new callback again,
+  // forever. Bailing out in setPanelModes when nothing actually changed guards the same case for
+  // any other caller.
+  const handleEditingModeChange = useCallback(
+    (mode: 'small' | 'big') => {
+      if (editingIndex === null) return
+      setPanelModes((m) => (m[editingIndex] === mode ? m : m.map((mm, i) => (i === editingIndex ? mode : mm))))
+    },
+    [editingIndex],
+  )
 
   const allSmall = panelModes.every((m) => m === 'small')
   const panelValid = useMemo(
@@ -107,16 +123,16 @@ export function ComparePane({ tab }: { tab: Tab<'compare'> }) {
   const stats: SummaryStat[] = isPairwise
     ? diff.result
       ? [
-          { key: 'added', label: t('compare.summary.added'), value: diff.result.counts.added, dotClass: 'bg-emerald-500' },
-          { key: 'removed', label: t('compare.summary.removed'), value: diff.result.counts.removed, dotClass: 'bg-rose-500' },
-          { key: 'changed', label: t('compare.summary.changed'), value: diff.result.counts.changed, dotClass: 'bg-amber-500' },
+          { key: 'added', label: t('compare.summary.added'), value: diff.result.counts.added, tone: 'success' },
+          { key: 'removed', label: t('compare.summary.removed'), value: diff.result.counts.removed, tone: 'destructive' },
+          { key: 'changed', label: t('compare.summary.changed'), value: diff.result.counts.changed, tone: 'warning' },
           { key: 'same', label: t('compare.summary.same'), value: diff.result.counts.same },
         ]
       : []
     : (() => {
         const s = summarizeNWayRows(nWayRows)
         return [
-          { key: 'differs', label: t('compare.summary.changed'), value: s.differs, dotClass: 'bg-amber-500' },
+          { key: 'differs', label: t('compare.summary.changed'), value: s.differs, tone: 'warning' as const },
           { key: 'same', label: t('compare.summary.same'), value: s.same },
         ]
       })()
@@ -145,35 +161,45 @@ export function ComparePane({ tab }: { tab: Tab<'compare'> }) {
       ]
     : []
 
+  const editingPanel = editingIndex !== null ? (panels[editingIndex] ?? null) : null
+
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex h-56 shrink-0 gap-px overflow-x-auto overflow-y-hidden bg-border">
+      <div className="flex shrink-0 flex-wrap items-center gap-2.5 px-4 pb-3 pt-3.5">
         {panels.map((panel, index) => (
-          <ComparePanel
-            key={panel.id}
-            panel={panel}
-            onTextChange={(text) => updatePanel(index, { text })}
-            onSoftModeChange={(softMode) => updatePanel(index, { softMode })}
-            onTitleChange={(title) => updatePanel(index, { title })}
-            onModeChange={(mode) => setPanelModes((m) => m.map((mm, i) => (i === index ? mode : mm)))}
-            onLoadExample={index === 0 || index === 1 ? () => updatePanel(index, { text: index === 0 ? COMPARE_EXAMPLE_LEFT : COMPARE_EXAMPLE_RIGHT }) : undefined}
-            onRemove={panels.length > MIN_PANELS ? () => removePanel(index) : undefined}
-          />
+          <CompareSourceChip key={panel.id} panel={panel} onEdit={() => setEditingIndex(index)} />
         ))}
-        <div className="flex w-14 shrink-0 items-center justify-center bg-background">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={addPanel}
-            disabled={panels.length >= MAX_PANELS}
-            title={panels.length >= MAX_PANELS ? t('compare.maxPanelsReached') : t('compare.addPanel')}
-          >
-            <Plus />
-          </Button>
+        <button
+          onClick={addPanel}
+          disabled={panels.length >= MAX_PANELS}
+          title={panels.length >= MAX_PANELS ? t('compare.maxPanelsReached') : t('compare.addPanel')}
+          className="flex h-[34px] shrink-0 items-center gap-1.5 rounded-lg border border-dashed border-border px-3 text-xs text-muted-foreground hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          {t('compare.addPanel')}
+        </button>
+        <div className="ml-auto">
+          <DiffOptionsPanel options={tab.state.options} onChange={setOptions} />
         </div>
       </div>
 
-      <DiffOptionsPanel options={tab.state.options} onChange={setOptions} />
+      <CompareEditDialog
+        panel={editingPanel}
+        open={editingIndex !== null}
+        onOpenChange={(open) => !open && setEditingIndex(null)}
+        onTextChange={(text) => editingIndex !== null && updatePanel(editingIndex, { text })}
+        onSoftModeChange={(softMode) => editingIndex !== null && updatePanel(editingIndex, { softMode })}
+        onTitleChange={(title) => editingIndex !== null && updatePanel(editingIndex, { title })}
+        onModeChange={handleEditingModeChange}
+        onLoadExample={
+          editingIndex === 0 || editingIndex === 1
+            ? () => editingIndex !== null && updatePanel(editingIndex, { text: editingIndex === 0 ? COMPARE_EXAMPLE_LEFT : COMPARE_EXAMPLE_RIGHT })
+            : undefined
+        }
+        onRemove={
+          editingIndex !== null && panels.length > MIN_PANELS ? () => removePanel(editingIndex) : undefined
+        }
+      />
 
       <div className="flex min-h-0 flex-1 flex-col">
         {!allSmall ? (
@@ -210,21 +236,25 @@ export function ComparePane({ tab }: { tab: Tab<'compare'> }) {
               showOnlyDifferences={tab.state.showOnlyDifferences}
               onShowOnlyDifferencesChange={setShowOnlyDifferences}
             />
-            <div className="flex shrink-0 items-center justify-end border-b border-border px-3 py-2">
-              <ExportBar formats={exportFormats} />
+            <div className="min-h-0 flex-1 overflow-hidden px-4 pb-4">
+              <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl bg-card ring-1 ring-inset ring-border">
+                <div className="flex shrink-0 items-center justify-end border-b border-border/60 px-3 py-2">
+                  <ExportBar formats={exportFormats} />
+                </div>
+                {effectiveView === 'side-by-side' ? (
+                  <SideBySideView rows={filteredNWayRows} panelTitles={panelTitles} className="min-h-0 flex-1" />
+                ) : effectiveView === 'tree' && diff.result ? (
+                  <DiffTreeView root={diff.result} className="min-h-0 flex-1" />
+                ) : isPairwise && diff.result ? (
+                  <DiffTableView
+                    rows={flattenDiff(diff.result, tab.state.showOnlyDifferences)}
+                    className="min-h-0 flex-1"
+                  />
+                ) : (
+                  <NWayTableView rows={filteredNWayRows} panelTitles={panelTitles} className="min-h-0 flex-1" />
+                )}
+              </div>
             </div>
-            {effectiveView === 'side-by-side' ? (
-              <SideBySideView rows={filteredNWayRows} panelTitles={panelTitles} className="min-h-0 flex-1" />
-            ) : effectiveView === 'tree' && diff.result ? (
-              <DiffTreeView root={diff.result} className="min-h-0 flex-1" />
-            ) : isPairwise && diff.result ? (
-              <DiffTableView
-                rows={flattenDiff(diff.result, tab.state.showOnlyDifferences)}
-                className="min-h-0 flex-1"
-              />
-            ) : (
-              <NWayTableView rows={filteredNWayRows} panelTitles={panelTitles} className="min-h-0 flex-1" />
-            )}
           </>
         ) : null}
       </div>

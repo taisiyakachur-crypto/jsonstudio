@@ -6,6 +6,8 @@ import { applyThemeClass, useSettingsStore } from '@/store/settings-store'
 import { CommandPalette } from './command-palette'
 import { Footer } from './footer'
 import { HeaderControls } from './header-controls'
+import { MobileTabActions } from './mobile-tab-actions'
+import { MobileTabBar } from './mobile-tab-bar'
 import { EmptyTabsPlaceholder, TabBar } from './tab-bar'
 import { TabContent } from './tab-content'
 import { useGlobalHotkeys } from './use-hotkeys'
@@ -42,15 +44,32 @@ export function App() {
   return (
     <TooltipProvider delayDuration={300}>
       <div className="flex h-screen flex-col bg-background text-foreground">
-        <header className="flex h-11 shrink-0 items-center justify-between border-b border-border px-3">
-          <span className="text-sm font-semibold tracking-tight">JSON Studio</span>
-          <HeaderControls />
+        <header className="flex h-14 shrink-0 items-center gap-5 border-b border-border px-4">
+          <div className="flex shrink-0 items-center gap-2.5">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary font-mono text-[13px] font-semibold text-secondary-foreground">
+              {'{}'}
+            </span>
+            <span className="text-[15px] font-semibold tracking-tight">JSON Studio</span>
+          </div>
+          <div className="hidden min-w-0 flex-1 sm:flex">
+            <TabBar />
+          </div>
+          <div className="ml-auto flex shrink-0 items-center gap-1">
+            <HeaderControls onOpenPalette={() => setPaletteOpen(true)} />
+            <div className="sm:hidden">
+              <MobileTabActions />
+            </div>
+          </div>
         </header>
-        <TabBar />
         <main className="flex flex-1 flex-col overflow-hidden">
           {activeTab ? <TabContent tab={activeTab} /> : <EmptyTabsPlaceholder />}
         </main>
-        <Footer />
+        <div className="sm:hidden">
+          <MobileTabBar />
+        </div>
+        <div className="hidden sm:flex">
+          <Footer />
+        </div>
       </div>
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <Toaster />

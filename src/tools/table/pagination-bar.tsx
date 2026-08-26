@@ -25,7 +25,7 @@ export function PaginationBar({
   const { t } = useTranslation()
 
   return (
-    <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-border px-3 py-1.5 text-xs text-muted-foreground">
+    <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-border px-4 py-2.5 text-xs text-muted-foreground">
       <span>{t('table.filteredRows', { filtered: totalFiltered, total: totalRows })}</span>
       <div className="flex items-center gap-2">
         <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>

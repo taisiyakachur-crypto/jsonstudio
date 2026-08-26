@@ -20,16 +20,18 @@ const TOOL_ICONS: Record<ToolType, React.ComponentType<{ className?: string }>> 
 
 const TOOL_ORDER: ToolType[] = ['compare', 'parse', 'table', 'chart', 'format']
 
-export function NewTabMenu() {
+export function NewTabMenu({ trigger }: { trigger?: React.ReactNode }) {
   const { t } = useTranslation()
   const addTab = useTabsStore((s) => s.addTab)
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon-sm" title={t('tabs.new')} aria-label={t('tabs.new')}>
-          <Plus />
-        </Button>
+        {trigger ?? (
+          <Button variant="ghost" size="icon-sm" title={t('tabs.new')} aria-label={t('tabs.new')}>
+            <Plus />
+          </Button>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
         {TOOL_ORDER.map((type) => {

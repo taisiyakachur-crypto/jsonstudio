@@ -72,10 +72,10 @@ function TabItem({ tab, active }: { tab: AnyTab; active: boolean }) {
           requestAnimationFrame(() => inputRef.current?.select())
         }}
         className={cn(
-          'group relative flex h-9 min-w-[9rem] max-w-[14rem] shrink-0 select-none items-center gap-2 border-r border-border px-3 text-sm transition-colors',
+          'group relative flex h-8 max-w-[12rem] shrink-0 select-none items-center gap-1.5 rounded-lg px-3 text-[13px] font-medium transition-colors',
           active
-            ? 'bg-background text-foreground'
-            : 'bg-muted/40 text-muted-foreground hover:bg-muted/70',
+            ? 'bg-secondary text-secondary-foreground'
+            : 'text-muted-foreground hover:bg-accent hover:text-foreground',
         )}
       >
         <Icon className="h-3.5 w-3.5 shrink-0" />
@@ -93,18 +93,18 @@ function TabItem({ tab, active }: { tab: AnyTab; active: boolean }) {
                 setEditing(false)
               }
             }}
-            className="w-full bg-transparent text-sm outline-none"
+            className="w-24 bg-transparent text-[13px] outline-none"
           />
         ) : (
-          <span className="flex-1 truncate">{tab.title}</span>
+          <span className="max-w-[8rem] truncate">{tab.title}</span>
         )}
         <DropdownMenuTrigger asChild>
           <button
-            className="rounded-sm p-0.5 opacity-0 hover:bg-accent group-hover:opacity-100"
+            className="rounded-sm p-0.5 opacity-0 hover:bg-black/10 group-hover:opacity-100 dark:hover:bg-white/10"
             onClick={(e) => e.stopPropagation()}
             aria-label="more"
           >
-            <MoreVertical className="h-3.5 w-3.5" />
+            <MoreVertical className="h-3 w-3" />
           </button>
         </DropdownMenuTrigger>
         <button
@@ -112,10 +112,10 @@ function TabItem({ tab, active }: { tab: AnyTab; active: boolean }) {
             e.stopPropagation()
             closeTab(tab.id)
           }}
-          className="rounded-sm p-0.5 opacity-0 hover:bg-accent group-hover:opacity-100"
+          className="rounded-sm p-0.5 opacity-0 hover:bg-black/10 group-hover:opacity-100 dark:hover:bg-white/10"
           aria-label={t('tabs.close')}
         >
-          <X className="h-3.5 w-3.5" />
+          <X className="h-3 w-3" />
         </button>
       </div>
       <DropdownMenuContent align="start">
@@ -144,15 +144,11 @@ export function TabBar() {
   const activeTabId = useTabsStore((s) => s.activeTabId)
 
   return (
-    <div className="flex h-9 shrink-0 items-center border-b border-border bg-muted/20">
-      <div className="no-scrollbar flex flex-1 overflow-x-auto">
-        {tabs.map((tab) => (
-          <TabItem key={tab.id} tab={tab} active={tab.id === activeTabId} />
-        ))}
-      </div>
-      <div className="flex shrink-0 items-center border-l border-border px-1">
-        <NewTabMenu />
-      </div>
+    <div className="no-scrollbar flex min-w-0 shrink items-center gap-0.5 overflow-x-auto rounded-[10px] bg-muted/60 p-[3px]">
+      {tabs.map((tab) => (
+        <TabItem key={tab.id} tab={tab} active={tab.id === activeTabId} />
+      ))}
+      <NewTabMenu />
     </div>
   )
 }

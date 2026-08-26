@@ -1,5 +1,4 @@
 import { Columns3 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useTranslation } from '@/i18n'
@@ -20,6 +19,7 @@ export function ColumnManager({
 }) {
   const { t } = useTranslation()
   const hiddenSet = new Set(hiddenColumns)
+  const visibleCount = columns.length - hiddenSet.size
 
   function toggleColumn(key: string, visible: boolean) {
     onHiddenColumnsChange(visible ? hiddenColumns.filter((k) => k !== key) : [...hiddenColumns, key])
@@ -28,10 +28,10 @@ export function ColumnManager({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm">
+        <button className="flex h-[34px] shrink-0 items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-medium hover:bg-accent">
           <Columns3 className="h-3.5 w-3.5" />
-          {t('table.columns')}
-        </Button>
+          {t('table.columns')} · {visibleCount}
+        </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-64 p-2">
         <label className="flex items-center gap-2 rounded-sm px-1.5 py-1.5 text-sm hover:bg-accent">
