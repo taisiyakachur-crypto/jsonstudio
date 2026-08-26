@@ -62,6 +62,8 @@
   "header.actions": "Дії",
 
   "commandPalette.placeholder": "Перехід до вкладки або команда...",
+  "commandPalette.group.actions": "Дії",
+  "commandPalette.group.goTo": "Перейти до",
 
   "toast.tabRenamed": "Вкладку перейменовано",
   "toast.contentTooLarge": "Вміст не збережено, завеликий файл",

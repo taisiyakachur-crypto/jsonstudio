@@ -62,6 +62,8 @@
   "header.actions": "Actions",
 
   "commandPalette.placeholder": "Jump to a tab or run a command...",
+  "commandPalette.group.actions": "Actions",
+  "commandPalette.group.goTo": "Go to",
 
   "toast.tabRenamed": "Tab renamed",
   "toast.contentTooLarge": "Content not saved, file too large",
