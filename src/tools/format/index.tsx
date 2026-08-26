@@ -8,6 +8,7 @@ import { useTranslation } from '@/i18n'
 import { formatBytes, PREVIEW_LINE_COUNT } from '@/lib/big-file'
 import { useTabsStore } from '@/store/tabs-store'
 import type { FormatSidebarTab, Tab } from '@/types/tabs'
+import { FirstLaunchScreen } from '@/app/first-launch-screen'
 import { FORMAT_EXAMPLE_JSON } from './example'
 import { FormatInputPanel } from './format-input-panel'
 import { FormatResultPanel, type ResultView } from './format-result-panel'
@@ -15,8 +16,10 @@ import { FormatResultPanel, type ResultView } from './format-result-panel'
 export function FormatPane({ tab }: { tab: Tab<'format'> }) {
   const { t, locale } = useTranslation()
   const updateTabState = useTabsStore((s) => s.updateTabState)
+  const tabCount = useTabsStore((s) => s.tabs.length)
   const [resultView, setResultView] = useState<ResultView>('code')
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
 
   function setInput(input: string) {
     updateTabState<'format'>(tab.id, (s) => ({ ...s, input }))
@@ -83,6 +86,23 @@ export function FormatPane({ tab }: { tab: Tab<'format'> }) {
           </>
         )}
       </div>
+    )
+  }
+
+  if (tabCount === 1 && tab.state.input.trim() === '') {
+    return (
+      <FirstLaunchScreen
+        dragOver={dragOver}
+        onDragOver={(e) => {
+          e.preventDefault()
+          setDragOver(true)
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={state.handleDrop}
+        onChooseFile={state.chooseFile}
+        onPasteClipboard={() => void state.pasteFromClipboard()}
+        onLoadFormatExample={() => setInput(FORMAT_EXAMPLE_JSON)}
+      />
     )
   }
 
