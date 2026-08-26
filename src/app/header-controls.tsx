@@ -35,7 +35,7 @@ export function HeaderControls({ onOpenPalette }: { onOpenPalette: () => void })
       >
         <Search className="h-3.5 w-3.5" />
         <span className="hidden sm:inline">{t('header.actions')}</span>
-        <span className="rounded bg-muted px-1 font-mono text-[11px] font-medium">⌘K</span>
+        <span className="hidden rounded bg-muted px-1 font-mono text-[11px] font-medium sm:inline">⌘K</span>
       </button>
       <Button
         variant="ghost"

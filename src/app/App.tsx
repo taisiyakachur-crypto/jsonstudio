@@ -6,6 +6,8 @@ import { applyThemeClass, useSettingsStore } from '@/store/settings-store'
 import { CommandPalette } from './command-palette'
 import { Footer } from './footer'
 import { HeaderControls } from './header-controls'
+import { MobileTabActions } from './mobile-tab-actions'
+import { MobileTabBar } from './mobile-tab-bar'
 import { EmptyTabsPlaceholder, TabBar } from './tab-bar'
 import { TabContent } from './tab-content'
 import { useGlobalHotkeys } from './use-hotkeys'
@@ -49,15 +51,25 @@ export function App() {
             </span>
             <span className="text-[15px] font-semibold tracking-tight">JSON Studio</span>
           </div>
-          <TabBar />
-          <div className="ml-auto flex shrink-0 items-center">
+          <div className="hidden min-w-0 flex-1 sm:flex">
+            <TabBar />
+          </div>
+          <div className="ml-auto flex shrink-0 items-center gap-1">
             <HeaderControls onOpenPalette={() => setPaletteOpen(true)} />
+            <div className="sm:hidden">
+              <MobileTabActions />
+            </div>
           </div>
         </header>
         <main className="flex flex-1 flex-col overflow-hidden">
           {activeTab ? <TabContent tab={activeTab} /> : <EmptyTabsPlaceholder />}
         </main>
-        <Footer />
+        <div className="sm:hidden">
+          <MobileTabBar />
+        </div>
+        <div className="hidden sm:flex">
+          <Footer />
+        </div>
       </div>
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <Toaster />

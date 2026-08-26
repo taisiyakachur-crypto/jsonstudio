@@ -23,6 +23,7 @@
   "tabs.newTool.chart": "Chart",
   "tabs.newTool.format": "Format & Validate",
   "tabs.close": "Close tab",
+  "tabs.moreActions": "Tab actions",
   "tabs.duplicate": "Duplicate tab",
   "tabs.rename": "Rename",
   "tabs.empty.title": "No tabs open",
