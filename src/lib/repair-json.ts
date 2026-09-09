@@ -3,6 +3,15 @@ import type { JsonValue } from '@/types/json'
 
 const MAX_TRIM_ATTEMPTS = 12
 
+/** A line that's pure repeated punctuation (`----...`, `===...`) -- a visual separator some
+ *  sources (log dumps, docs) insert between sections. Never valid JSON on its own, so it's safe
+ *  to drop outright rather than let it break parsing of the real content around it. */
+const DECORATIVE_LINE = /^[ \t]*[-=_*~]{3,}[ \t]*$/gm
+
+/** Matches the start of an object member (`"key": ...`) with nothing but whitespace before it --
+ *  i.e. text that looks like it was meant to be inside `{ }` but the braces got lost in copying. */
+const BARE_OBJECT_MEMBER_START = /^\s*"(?:[^"\\]|\\.)*"\s*:/
+
 type Opener = '{' | '['
 
 function closerFor(opener: Opener): '}' | ']' {
@@ -112,17 +121,29 @@ function trimDanglingMember(body: string, inObjectContext: boolean): string | nu
 
 /**
  * Best-effort repair for JSON that's close but not quite valid: unterminated strings/objects/
- * arrays, missing closing brackets, `//`/`\/* *\/` comments, and leftover trailing data after the
- * real value ends. Returns the parsed value, or `undefined` if the text couldn't be salvaged --
- * callers should fall back to something else (e.g. auto-detecting a different source format)
- * rather than treating that as a hard error.
+ * arrays, missing closing brackets, `//`/`\/* *\/` comments, decorative separator lines, a bare
+ * object body missing its wrapping `{ }`, and leftover trailing data after the real value ends.
+ * Returns the parsed value, or `undefined` if the text couldn't be salvaged -- callers should
+ * fall back to something else (e.g. auto-detecting a different source format) rather than
+ * treating that as a hard error.
  */
 export function repairJson(rawText: string): JsonValue | undefined {
   const withoutBom = stripBom(rawText)
   if (withoutBom.trim() === '') return undefined
 
-  const bracketIndex = withoutBom.search(/[{[]/)
-  const text = bracketIndex > 0 ? withoutBom.slice(bracketIndex) : withoutBom
+  const withoutDecorativeLines = withoutBom.replace(DECORATIVE_LINE, '')
+
+  // A bare object body ("key": value, "key2": value2, ...) with no wrapping braces is a common
+  // paste mistake -- e.g. copying an object's inner fields out of a bigger document or API
+  // response viewer. Wrap it *before* the leading-prose skip below, which would otherwise mistake
+  // the first member's own `:`/`[`/`{` for buried JSON and silently drop the leading key (and
+  // everything after that member's own structure closes).
+  const isBareObjectBody =
+    BARE_OBJECT_MEMBER_START.test(withoutDecorativeLines) && !/^\s*[{[]/.test(withoutDecorativeLines)
+  const source = isBareObjectBody ? `{${withoutDecorativeLines}}` : withoutDecorativeLines
+
+  const bracketIndex = source.search(/[{[]/)
+  const text = bracketIndex > 0 ? source.slice(bracketIndex) : source
 
   const { body, openStack } = scanStructure(text)
   let candidate = body

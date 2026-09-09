@@ -4,6 +4,7 @@ import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { useTranslation } from '@/i18n'
 import { formatJson } from '@/lib/format-json'
 import { detectFormat, ParseInputError, parseByFormat, type SourceFormat } from '@/lib/parsers'
+import { repairJson } from '@/lib/repair-json'
 import { TOOL_TITLES } from '@/lib/tab-defaults'
 import { useTabsStore } from '@/store/tabs-store'
 import type { Tab } from '@/types/tabs'
@@ -26,18 +27,27 @@ export function ParsePane({ tab }: { tab: Tab<'parse'> }) {
   const detectedFormat = useMemo(() => detectFormat(debouncedInput), [debouncedInput])
 
   const parseResult = useMemo(() => {
-    if (debouncedInput.trim() === '') return { value: null, error: null }
+    if (debouncedInput.trim() === '') return { value: null, error: null, repaired: false }
     try {
       const value = parseByFormat(debouncedInput, tab.state.sourceFormat, {
         csvDelimiter: tab.state.csvDelimiter,
         csvCoerceTypes: tab.state.csvCoerceTypes,
       })
-      return { value, error: null }
+      return { value, error: null, repaired: false }
     } catch (err) {
+      // JSON5 is the one format that's "supposed" to be JSON -- give it a best-effort repair
+      // (unterminated strings/structures, missing braces, stray separator lines, ...) before
+      // surfacing the parse error. Other formats (YAML, CSV, ...) have their own syntax and
+      // don't benefit from a JSON-shaped repair.
+      const resolved = tab.state.sourceFormat === 'auto' ? detectedFormat : tab.state.sourceFormat
+      if (resolved === 'json5') {
+        const repairedValue = repairJson(debouncedInput)
+        if (repairedValue !== undefined) return { value: repairedValue, error: null, repaired: true }
+      }
       const message = err instanceof ParseInputError ? err.message : (err as Error).message
-      return { value: null, error: message }
+      return { value: null, error: message, repaired: false }
     }
-  }, [debouncedInput, tab.state.sourceFormat, tab.state.csvDelimiter, tab.state.csvCoerceTypes])
+  }, [debouncedInput, tab.state.sourceFormat, tab.state.csvDelimiter, tab.state.csvCoerceTypes, detectedFormat])
 
   const effectiveFormat = tab.state.sourceFormat === 'auto' ? detectedFormat : tab.state.sourceFormat
   const columnCount =
@@ -108,6 +118,7 @@ export function ParsePane({ tab }: { tab: Tab<'parse'> }) {
       <ParseOutput
         value={parseResult.value}
         error={parseResult.error}
+        repaired={parseResult.repaired}
         minified={minified}
         onMinifiedChange={setMinified}
         onSendTo={sendTo}

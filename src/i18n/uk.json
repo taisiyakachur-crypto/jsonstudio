@@ -214,6 +214,7 @@
   "parse.output.count": "{{count}} елементів",
   "parse.output.empty": "Введіть текст, щоб побачити результат",
   "parse.output.error": "Не вдалося розпізнати: {{message}}",
+  "parse.output.repaired": "Відремонтовано",
   "parse.action.copyEscaped": "Копіювати як екранований рядок",
   "parse.action.sendToCompare": "→ Порівняти",
   "parse.action.sendToTable": "→ Таблиця",

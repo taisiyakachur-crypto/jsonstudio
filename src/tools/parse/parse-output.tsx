@@ -1,4 +1,4 @@
-import { BarChart3, CheckCircle2, Clipboard, GitCompareArrows, Minimize2, Table2, Wand2, XCircle } from 'lucide-react'
+import { BarChart3, CheckCircle2, Clipboard, GitCompareArrows, Minimize2, Table2, Wand2, Wrench, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { JsonEditor } from '@/components/json-input'
 import { Switch } from '@/components/ui/switch'
@@ -13,6 +13,7 @@ import type { ToolType } from '@/types/tabs'
 export function ParseOutput({
   value,
   error,
+  repaired,
   minified,
   onMinifiedChange,
   onSendTo,
@@ -22,6 +23,8 @@ export function ParseOutput({
 }: {
   value: JsonValue | null
   error: string | null
+  /** `value` only parsed after best-effort repair of broken JSON5 input. */
+  repaired: boolean
   minified: boolean
   onMinifiedChange: (minified: boolean) => void
   onSendTo: (type: Extract<ToolType, 'compare' | 'table' | 'chart' | 'format'>) => void
@@ -56,6 +59,12 @@ export function ParseOutput({
           <span className="flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success">
             <CheckCircle2 className="h-3.5 w-3.5" />
             {count !== undefined ? t('parse.output.count', { count }) : t('common.valid')}
+          </span>
+        )}
+        {value !== null && repaired && (
+          <span className="flex items-center gap-1.5 rounded-full bg-warning/10 px-2.5 py-1 text-xs font-medium text-warning">
+            <Wrench className="h-3.5 w-3.5" />
+            {t('parse.output.repaired')}
           </span>
         )}
         {error && (
