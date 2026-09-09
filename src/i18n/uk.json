@@ -96,6 +96,8 @@
   "jsonInput.stats": "{{size}} · {{nodes}} вузлів · глибина {{depth}}",
   "jsonInput.copied": "Скопійовано в буфер",
   "jsonInput.formatError": "Неможливо відформатувати: JSON недійсний",
+  "jsonInput.repaired": "JSON було пошкоджено — виправлено та відформатовано",
+  "jsonInput.autoDecoded": "Розпізнано формат «{{format}}» — дані декодовано в JSON",
   "jsonInput.pasteError": "Не вдалося прочитати буфер обміну",
   "jsonInput.clipboardEmpty": "Буфер обміну порожній",
 

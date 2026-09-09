@@ -96,6 +96,8 @@
   "jsonInput.stats": "{{size}} · {{nodes}} nodes · depth {{depth}}",
   "jsonInput.copied": "Copied to clipboard",
   "jsonInput.formatError": "Can't format: JSON is invalid",
+  "jsonInput.repaired": "JSON was broken — repaired and formatted",
+  "jsonInput.autoDecoded": "Detected format \"{{format}}\" — decoded into JSON",
   "jsonInput.pasteError": "Couldn't read the clipboard",
   "jsonInput.clipboardEmpty": "Clipboard is empty",
 
