@@ -29,7 +29,16 @@ export function detectFormat(rawText: string): Exclude<SourceFormat, 'auto'> {
     return 'ndjson'
   }
 
-  if (/^[{[]/.test(text) && /[}\]]$/.test(text)) {
+  // A trailing comma (a dangling member, or just leftover from copying out of a bigger document)
+  // shouldn't stop this from reading as JSON-shaped.
+  if (/^[{[]/.test(text) && /[}\]]$/.test(text.replace(/,\s*$/, ''))) {
+    return 'json5'
+  }
+
+  // A bare object body ("key": value, "key2": value2, ...) missing its outer `{ }` -- still
+  // unmistakably JSON5-shaped, so it shouldn't fall through to the generic "JSON embedded in a
+  // log line" catch-all below just because there's no wrapping bracket.
+  if (/^"(?:[^"\\]|\\.)*"\s*:/.test(text)) {
     return 'json5'
   }
 

@@ -46,4 +46,18 @@ describe('detectFormat', () => {
   it('falls back to json5 for empty input', () => {
     expect(detectFormat('')).toBe('json5')
   })
+
+  it('recognizes JSON with a trailing comma after the closing bracket', () => {
+    expect(detectFormat('{"a": 1},')).toBe('json5')
+    expect(detectFormat('[1, 2, 3],')).toBe('json5')
+  })
+
+  it('recognizes a bare object body missing its outer braces as json5, not a log line', () => {
+    expect(detectFormat('"a": 1, "b": 2')).toBe('json5')
+  })
+
+  it('recognizes a bare object body with a decorative separator and a trailing comma', () => {
+    const input = '"a": [1, 2],\n----------------\n"b": [3, 4],'
+    expect(detectFormat(input)).toBe('json5')
+  })
 })
