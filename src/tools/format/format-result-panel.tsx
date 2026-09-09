@@ -1,5 +1,4 @@
-import { CheckCircle2, Clipboard, Download, XCircle } from 'lucide-react'
-import { useMemo } from 'react'
+import { CheckCircle2, Clipboard, Download, WandSparkles, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { JsonEditor } from '@/components/json-input/json-editor'
 import { JsonValueView } from '@/components/json-value-view'
@@ -7,9 +6,8 @@ import { Button } from '@/components/ui/button'
 import { useTranslation } from '@/i18n'
 import { formatBytes } from '@/lib/big-file'
 import { downloadTextFile } from '@/lib/download-file'
-import { formatJson } from '@/lib/format-json'
 import type { JsonStats } from '@/lib/json-stats'
-import type { JsonValidationResult } from '@/lib/validate-json'
+import type { HighlightRange } from '@/lib/stringify-with-highlights'
 import { cn } from '@/lib/utils'
 import type { JsonValue } from '@/types/json'
 import type { FormatSidebarTab } from '@/types/tabs'
@@ -17,9 +15,33 @@ import { FormatStatsStrip } from './format-stats-strip'
 
 export type ResultView = 'code' | 'tree'
 
+function HighlightedCode({ text, ranges }: { text: string; ranges: HighlightRange[] }) {
+  const nodes: React.ReactNode[] = []
+  let cursor = 0
+  ranges.forEach((r, i) => {
+    if (r.start > cursor) nodes.push(text.slice(cursor, r.start))
+    nodes.push(
+      <mark key={i} className="rounded bg-warning/25 px-0.5 text-foreground">
+        {text.slice(r.start, r.end)}
+      </mark>,
+    )
+    cursor = r.end
+  })
+  if (cursor < text.length) nodes.push(text.slice(cursor))
+  return (
+    <pre className="h-full overflow-auto whitespace-pre-wrap break-words p-4 font-mono text-sm leading-relaxed">
+      <code>{nodes}</code>
+    </pre>
+  )
+}
+
 export function FormatResultPanel({
-  rawValue,
-  validation,
+  isEmpty,
+  value,
+  repaired,
+  errorMessage,
+  resultText,
+  highlightRanges,
   stats,
   view,
   onViewChange,
@@ -32,8 +54,15 @@ export function FormatResultPanel({
   schemaInput,
   onSchemaInputChange,
 }: {
-  rawValue: string
-  validation: JsonValidationResult
+  isEmpty: boolean
+  /** The final value (possibly repaired, possibly key-sorted) behind `resultText`. */
+  value: JsonValue | null
+  /** Whether repair had to fill in a missing value to make this valid -- see `highlightRanges`. */
+  repaired: boolean
+  errorMessage: string | null
+  resultText: string
+  /** Character ranges in `resultText` that were synthesized by repair, not typed by the user. */
+  highlightRanges: HighlightRange[]
   stats: JsonStats | null
   view: ResultView
   onViewChange: (view: ResultView) => void
@@ -47,18 +76,14 @@ export function FormatResultPanel({
   onSchemaInputChange: (schema: string) => void
 }) {
   const { t, locale } = useTranslation()
-  const value = validation.valid && validation.value !== undefined ? validation.value : null
-  const formatted = useMemo(() => (value !== null ? formatJson(value, '2') : ''), [value])
 
   function handleCopy() {
-    void navigator.clipboard.writeText(formatted).then(() => toast.success(t('jsonInput.copied')))
+    void navigator.clipboard.writeText(resultText).then(() => toast.success(t('jsonInput.copied')))
   }
 
   function handleDownload() {
-    downloadTextFile('data.json', formatted, 'application/json;charset=utf-8')
+    downloadTextFile('data.json', resultText, 'application/json;charset=utf-8')
   }
-
-  const isEmpty = rawValue.trim() === ''
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -67,7 +92,7 @@ export function FormatResultPanel({
           {t('format.output.label')}
         </span>
         {!isEmpty &&
-          (validation.valid ? (
+          (value !== null ? (
             <span className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success">
               <CheckCircle2 className="h-3.5 w-3.5" />
               {t('common.valid')}
@@ -75,16 +100,25 @@ export function FormatResultPanel({
           ) : (
             <span className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-destructive/10 px-2.5 py-1 text-xs font-medium text-destructive">
               <XCircle className="h-3.5 w-3.5" />
-              {validation.error?.message ?? t('common.invalid')}
+              {errorMessage ?? t('common.invalid')}
             </span>
           ))}
-        {validation.valid && stats && (
+        {value !== null && repaired && (
+          <span
+            className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-warning/10 px-2.5 py-1 text-xs font-medium text-warning"
+            title={t('format.output.repairedHint')}
+          >
+            <WandSparkles className="h-3.5 w-3.5" />
+            {t('format.output.repaired')}
+          </span>
+        )}
+        {value !== null && stats && (
           <span className="whitespace-nowrap font-mono text-xs text-muted-foreground">
-            {t('format.meta', { size: formatBytes(new Blob([formatted]).size, locale), nodes: stats.nodeCount })}
+            {t('format.meta', { size: formatBytes(new Blob([resultText]).size, locale), nodes: stats.nodeCount })}
           </span>
         )}
         <div className="ml-auto flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleCopy} disabled={!validation.valid}>
+          <Button variant="outline" size="sm" onClick={handleCopy} disabled={value === null}>
             <Clipboard className="h-3.5 w-3.5" />
             {t('common.copy')}
           </Button>
@@ -92,7 +126,7 @@ export function FormatResultPanel({
             variant="outline"
             size="icon-sm"
             onClick={handleDownload}
-            disabled={!validation.valid}
+            disabled={value === null}
             aria-label={t('common.download')}
           >
             <Download className="h-3.5 w-3.5" />
@@ -121,12 +155,16 @@ export function FormatResultPanel({
       </div>
 
       <div className="min-h-0 flex-1 overflow-hidden">
-        {isEmpty || !validation.valid ? (
+        {isEmpty || value === null ? (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
             {t(isEmpty ? 'format.output.empty' : 'format.output.invalid')}
           </div>
         ) : view === 'code' ? (
-          <JsonEditor value={formatted} softMode={false} locale={locale} readOnly />
+          highlightRanges.length > 0 ? (
+            <HighlightedCode text={resultText} ranges={highlightRanges} />
+          ) : (
+            <JsonEditor value={resultText} softMode={false} locale={locale} readOnly />
+          )
         ) : (
           <div className="h-full overflow-auto px-4 py-3">
             <JsonValueView value={value as JsonValue} />
@@ -134,7 +172,7 @@ export function FormatResultPanel({
         )}
       </div>
 
-      {validation.valid && stats && (
+      {value !== null && stats && (
         <FormatStatsStrip
           stats={stats}
           value={value}

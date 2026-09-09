@@ -96,4 +96,8 @@ describe('repairJson', () => {
   it('still skips leading prose, not just a bare object body', () => {
     expect(repairJson('Response: {"ok": true}')).toEqual({ ok: true })
   })
+
+  it('still repairs a bare object body whose own tail is dangling', () => {
+    expect(repairJson('"a": 1, "b":')).toEqual({ a: 1 })
+  })
 })

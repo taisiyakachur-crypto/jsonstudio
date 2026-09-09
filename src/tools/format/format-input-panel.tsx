@@ -17,6 +17,11 @@ export function FormatInputPanel({
   onSoftModeChange,
   onLoadExample,
   state,
+  minified,
+  sortKeys,
+  onFormat,
+  onToggleMinified,
+  onToggleSortKeys,
 }: {
   value: string
   onChange: (value: string) => void
@@ -24,9 +29,25 @@ export function FormatInputPanel({
   onSoftModeChange: (soft: boolean) => void
   onLoadExample?: () => void
   state: InputState
+  /** Whether the Result panel is currently showing the minified/sorted view -- these are display
+   *  toggles for the (always live) result, not one-shot edits to this input. */
+  minified: boolean
+  sortKeys: boolean
+  onFormat: () => void
+  onToggleMinified: () => void
+  onToggleSortKeys: () => void
 }) {
   const { t, locale } = useTranslation()
   const [dragOver, setDragOver] = useState(false)
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    const mod = e.metaKey || e.ctrlKey
+    if (!mod) return
+    if (e.key === 'Enter' || (e.shiftKey && e.key.toLowerCase() === 'f')) {
+      e.preventDefault()
+      onFormat()
+    }
+  }
 
   return (
     <div
@@ -39,7 +60,7 @@ export function FormatInputPanel({
         setDragOver(false)
         state.handleDrop(e)
       }}
-      onKeyDownCapture={state.handleKeyDown}
+      onKeyDownCapture={handleKeyDown}
       className="relative flex w-[380px] shrink-0 flex-col overflow-hidden border-r border-border"
     >
       {dragOver && (
@@ -88,15 +109,25 @@ export function FormatInputPanel({
             <JsonEditor value={value} onChange={onChange} softMode={softMode} locale={locale} />
           </div>
           <div className="flex flex-wrap items-center gap-1.5 p-3">
-            <Button size="sm" className="rounded-lg" onClick={state.handleFormat}>
+            <Button size="sm" className="rounded-lg" onClick={onFormat}>
               <Braces className="h-3.5 w-3.5" />
               {t('common.format')}
             </Button>
-            <Button variant="outline" size="sm" className="rounded-lg" onClick={state.handleMinify}>
+            <Button
+              variant={minified ? 'default' : 'outline'}
+              size="sm"
+              className="rounded-lg"
+              onClick={onToggleMinified}
+            >
               <Minimize2 className="h-3.5 w-3.5" />
               {t('common.minify')}
             </Button>
-            <Button variant="outline" size="sm" className="rounded-lg" onClick={state.handleSortKeys}>
+            <Button
+              variant={sortKeys ? 'default' : 'outline'}
+              size="sm"
+              className="rounded-lg"
+              onClick={onToggleSortKeys}
+            >
               <SortAsc className="h-3.5 w-3.5" />
               A→Z
             </Button>

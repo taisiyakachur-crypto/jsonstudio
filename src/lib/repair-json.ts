@@ -6,19 +6,19 @@ const MAX_TRIM_ATTEMPTS = 12
 /** A line that's pure repeated punctuation (`----...`, `===...`) -- a visual separator some
  *  sources (log dumps, docs) insert between sections. Never valid JSON on its own, so it's safe
  *  to drop outright rather than let it break parsing of the real content around it. */
-const DECORATIVE_LINE = /^[ \t]*[-=_*~]{3,}[ \t]*$/gm
+export const DECORATIVE_LINE = /^[ \t]*[-=_*~]{3,}[ \t]*$/gm
 
 /** Matches the start of an object member (`"key": ...`) with nothing but whitespace before it --
  *  i.e. text that looks like it was meant to be inside `{ }` but the braces got lost in copying. */
-const BARE_OBJECT_MEMBER_START = /^\s*"(?:[^"\\]|\\.)*"\s*:/
+export const BARE_OBJECT_MEMBER_START = /^\s*"(?:[^"\\]|\\.)*"\s*:/
 
-type Opener = '{' | '['
+export type Opener = '{' | '['
 
-function closerFor(opener: Opener): '}' | ']' {
+export function closerFor(opener: Opener): '}' | ']' {
   return opener === '{' ? '}' : ']'
 }
 
-function stripBom(text: string): string {
+export function stripBom(text: string): string {
   return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text
 }
 
@@ -120,14 +120,12 @@ function trimDanglingMember(body: string, inObjectContext: boolean): string | nu
 }
 
 /**
- * Best-effort repair for JSON that's close but not quite valid: unterminated strings/objects/
- * arrays, missing closing brackets, `//`/`\/* *\/` comments, decorative separator lines, a bare
- * object body missing its wrapping `{ }`, and leftover trailing data after the real value ends.
- * Returns the parsed value, or `undefined` if the text couldn't be salvaged -- callers should
- * fall back to something else (e.g. auto-detecting a different source format) rather than
- * treating that as a hard error.
+ * Shared first pass for any JSON repair strategy: strips a BOM and decorative separator lines,
+ * wraps a bare object body ("key": value, ...) that's missing its outer `{ }`, and skips leading
+ * prose before the first real bracket (`Response: {...}` -> `{...}`). Returns `undefined` only
+ * when there's nothing but whitespace to work with.
  */
-export function repairJson(rawText: string): JsonValue | undefined {
+export function preprocessForRepair(rawText: string): string | undefined {
   const withoutBom = stripBom(rawText)
   if (withoutBom.trim() === '') return undefined
 
@@ -138,12 +136,29 @@ export function repairJson(rawText: string): JsonValue | undefined {
   // response viewer. Wrap it *before* the leading-prose skip below, which would otherwise mistake
   // the first member's own `:`/`[`/`{` for buried JSON and silently drop the leading key (and
   // everything after that member's own structure closes).
+  // Only *prepend* the opening brace -- appending a matching closer too would short-circuit the
+  // normal "structure never closed" handling below for a body whose own tail is incomplete (e.g.
+  // `"a": 1, "b":`), since that literal `}` would read as a real closer instead of a synthesized
+  // one and the dangling `"b":` would never get a chance to be repaired.
   const isBareObjectBody =
     BARE_OBJECT_MEMBER_START.test(withoutDecorativeLines) && !/^\s*[{[]/.test(withoutDecorativeLines)
-  const source = isBareObjectBody ? `{${withoutDecorativeLines}}` : withoutDecorativeLines
+  const source = isBareObjectBody ? `{${withoutDecorativeLines}` : withoutDecorativeLines
 
   const bracketIndex = source.search(/[{[]/)
-  const text = bracketIndex > 0 ? source.slice(bracketIndex) : source
+  return bracketIndex > 0 ? source.slice(bracketIndex) : source
+}
+
+/**
+ * Best-effort repair for JSON that's close but not quite valid: unterminated strings/objects/
+ * arrays, missing closing brackets, `//`/`\/* *\/` comments, decorative separator lines, a bare
+ * object body missing its wrapping `{ }`, and leftover trailing data after the real value ends.
+ * Returns the parsed value, or `undefined` if the text couldn't be salvaged -- callers should
+ * fall back to something else (e.g. auto-detecting a different source format) rather than
+ * treating that as a hard error.
+ */
+export function repairJson(rawText: string): JsonValue | undefined {
+  const text = preprocessForRepair(rawText)
+  if (text === undefined) return undefined
 
   const { body, openStack } = scanStructure(text)
   let candidate = body

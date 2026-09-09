@@ -3,8 +3,8 @@ import { toast } from 'sonner'
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { useTranslation } from '@/i18n'
 import { formatJson } from '@/lib/format-json'
+import { beautifyLoose } from '@/lib/beautify-loose'
 import { detectFormat, ParseInputError, parseByFormat, type SourceFormat } from '@/lib/parsers'
-import { repairJson } from '@/lib/repair-json'
 import { TOOL_TITLES } from '@/lib/tab-defaults'
 import { useTabsStore } from '@/store/tabs-store'
 import type { Tab } from '@/types/tabs'
@@ -27,25 +27,24 @@ export function ParsePane({ tab }: { tab: Tab<'parse'> }) {
   const detectedFormat = useMemo(() => detectFormat(debouncedInput), [debouncedInput])
 
   const parseResult = useMemo(() => {
-    if (debouncedInput.trim() === '') return { value: null, error: null, repaired: false }
+    if (debouncedInput.trim() === '') return { value: null, error: null, beautified: null }
     try {
       const value = parseByFormat(debouncedInput, tab.state.sourceFormat, {
         csvDelimiter: tab.state.csvDelimiter,
         csvCoerceTypes: tab.state.csvCoerceTypes,
       })
-      return { value, error: null, repaired: false }
+      return { value, error: null, beautified: null }
     } catch (err) {
-      // JSON5 is the one format that's "supposed" to be JSON -- give it a best-effort repair
-      // (unterminated strings/structures, missing braces, stray separator lines, ...) before
-      // surfacing the parse error. Other formats (YAML, CSV, ...) have their own syntax and
-      // don't benefit from a JSON-shaped repair.
+      // JSON5 is the one format that's "supposed" to be JSON -- rather than guess at fixing it
+      // (which risks silently changing what's actually there), just reflow the whitespace/indent
+      // of exactly what was typed and show that, missing brackets and all. Other formats (YAML,
+      // CSV, ...) have their own syntax and don't get a JSON-shaped fallback.
       const resolved = tab.state.sourceFormat === 'auto' ? detectedFormat : tab.state.sourceFormat
       if (resolved === 'json5') {
-        const repairedValue = repairJson(debouncedInput)
-        if (repairedValue !== undefined) return { value: repairedValue, error: null, repaired: true }
+        return { value: null, error: null, beautified: beautifyLoose(debouncedInput) }
       }
       const message = err instanceof ParseInputError ? err.message : (err as Error).message
-      return { value: null, error: message, repaired: false }
+      return { value: null, error: message, beautified: null }
     }
   }, [debouncedInput, tab.state.sourceFormat, tab.state.csvDelimiter, tab.state.csvCoerceTypes, detectedFormat])
 
@@ -79,8 +78,17 @@ export function ParsePane({ tab }: { tab: Tab<'parse'> }) {
   }
 
   function sendTo(type: SendableTool) {
-    if (parseResult.value === null) return
-    const text = formatJson(parseResult.value, '2')
+    // With a real parsed value, send it fully formatted. Otherwise (JSON5 that only got a loose
+    // beautify, still possibly invalid) only "→ Format" makes sense -- send the beautified text
+    // as-is and let Format's own repair take it from there.
+    let text: string
+    if (parseResult.value !== null) {
+      text = formatJson(parseResult.value, '2')
+    } else if (parseResult.beautified !== null && type === 'format') {
+      text = parseResult.beautified
+    } else {
+      return
+    }
     const newId = addTab(type)
     switch (type) {
       case 'compare':
@@ -118,7 +126,7 @@ export function ParsePane({ tab }: { tab: Tab<'parse'> }) {
       <ParseOutput
         value={parseResult.value}
         error={parseResult.error}
-        repaired={parseResult.repaired}
+        beautified={parseResult.beautified}
         minified={minified}
         onMinifiedChange={setMinified}
         onSendTo={sendTo}
