@@ -214,6 +214,7 @@
   "parse.output.count": "{{count}} items",
   "parse.output.empty": "Enter text to see the result",
   "parse.output.error": "Couldn't parse: {{message}}",
+  "parse.output.repaired": "Repaired",
   "parse.action.copyEscaped": "Copy as escaped string",
   "parse.action.sendToCompare": "→ Compare",
   "parse.action.sendToTable": "→ Table",

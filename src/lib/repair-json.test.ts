@@ -74,4 +74,26 @@ describe('repairJson', () => {
   it('returns undefined for text that never resolves to valid JSON', () => {
     expect(repairJson('just a sentence with no JSON in it at all')).toBeUndefined()
   })
+
+  it('wraps a bare object body missing its outer braces', () => {
+    expect(repairJson('"a": 1, "b": 2')).toEqual({ a: 1, b: 2 })
+  })
+
+  it('wraps a bare object body without dropping members after the first nested array', () => {
+    expect(repairJson('"list": [1, 2], "other": 3')).toEqual({ list: [1, 2], other: 3 })
+  })
+
+  it('strips a decorative separator line between members', () => {
+    const input = '{\n  "a": [1, 2],\n  ----------------\n  "b": [3, 4]\n}'
+    expect(repairJson(input)).toEqual({ a: [1, 2], b: [3, 4] })
+  })
+
+  it('handles a bare object body with a decorative separator line between members', () => {
+    const input = '"a": [1, 2],\n----------------\n"b": [3, 4]'
+    expect(repairJson(input)).toEqual({ a: [1, 2], b: [3, 4] })
+  })
+
+  it('still skips leading prose, not just a bare object body', () => {
+    expect(repairJson('Response: {"ok": true}')).toEqual({ ok: true })
+  })
 })
