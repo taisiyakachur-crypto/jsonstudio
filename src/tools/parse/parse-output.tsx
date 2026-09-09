@@ -1,4 +1,4 @@
-import { BarChart3, CheckCircle2, Clipboard, GitCompareArrows, Minimize2, Table2, Wand2, Wrench, XCircle } from 'lucide-react'
+import { BarChart3, CheckCircle2, Clipboard, GitCompareArrows, Minimize2, Table2, Wand2, WandSparkles, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { JsonEditor } from '@/components/json-input'
 import { Switch } from '@/components/ui/switch'
@@ -13,7 +13,7 @@ import type { ToolType } from '@/types/tabs'
 export function ParseOutput({
   value,
   error,
-  repaired,
+  beautified,
   minified,
   onMinifiedChange,
   onSendTo,
@@ -23,8 +23,9 @@ export function ParseOutput({
 }: {
   value: JsonValue | null
   error: string | null
-  /** `value` only parsed after best-effort repair of broken JSON5 input. */
-  repaired: boolean
+  /** Set when JSON5 parsing failed but the raw text was still reflowed with proper indentation --
+   *  no repair attempted, so it may still be missing brackets/quotes exactly as typed. */
+  beautified: string | null
   minified: boolean
   onMinifiedChange: (minified: boolean) => void
   onSendTo: (type: Extract<ToolType, 'compare' | 'table' | 'chart' | 'format'>) => void
@@ -35,8 +36,9 @@ export function ParseOutput({
 }) {
   const { t, locale } = useTranslation()
 
-  const text = value !== null ? (minified ? minifyJson(value) : formatJson(value, '2')) : ''
+  const text = value !== null ? (minified ? minifyJson(value) : formatJson(value, '2')) : (beautified ?? '')
   const count = Array.isArray(value) ? value.length : undefined
+  const hasOutput = value !== null || beautified !== null
 
   function copy() {
     void navigator.clipboard.writeText(text).then(() => toast.success(t('jsonInput.copied')))
@@ -61,10 +63,10 @@ export function ParseOutput({
             {count !== undefined ? t('parse.output.count', { count }) : t('common.valid')}
           </span>
         )}
-        {value !== null && repaired && (
+        {value === null && beautified !== null && (
           <span className="flex items-center gap-1.5 rounded-full bg-warning/10 px-2.5 py-1 text-xs font-medium text-warning">
-            <Wrench className="h-3.5 w-3.5" />
-            {t('parse.output.repaired')}
+            <WandSparkles className="h-3.5 w-3.5" />
+            {t('parse.output.beautifiedBadge')}
           </span>
         )}
         {error && (
@@ -84,7 +86,7 @@ export function ParseOutput({
           </button>
           <button
             onClick={copy}
-            disabled={value === null}
+            disabled={!hasOutput}
             className="flex h-[30px] items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-medium hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
           >
             <Clipboard className="h-3.5 w-3.5" />
@@ -124,7 +126,7 @@ export function ParseOutput({
           </button>
           <button
             onClick={() => onSendTo('format')}
-            disabled={value === null}
+            disabled={!hasOutput}
             className="flex h-[30px] items-center gap-1.5 rounded-lg bg-secondary px-2.5 text-xs font-medium text-secondary-foreground hover:bg-secondary/80 disabled:pointer-events-none disabled:opacity-50"
           >
             <Wand2 className="h-3.5 w-3.5" />
@@ -137,7 +139,7 @@ export function ParseOutput({
           <p className="flex h-full items-center justify-center pr-4 text-center text-sm text-destructive">
             {t('parse.output.error', { message: error })}
           </p>
-        ) : value === null ? (
+        ) : !hasOutput ? (
           <p className="flex h-full items-center justify-center pr-4 text-center text-sm text-muted-foreground">
             {t('parse.output.empty')}
           </p>
@@ -145,7 +147,7 @@ export function ParseOutput({
           <JsonEditor value={text} softMode={false} locale={locale} readOnly />
         )}
       </div>
-      {value !== null && (
+      {hasOutput && (
         <div className="flex shrink-0 items-center gap-3 border-t border-border px-4 py-2.5 text-xs text-muted-foreground">
           {showCoerceTypes && (
             <label className={cn('flex items-center gap-2', coerceTypes && 'text-foreground')}>
