@@ -3,11 +3,15 @@ import { toast } from 'sonner'
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { useJsonDocument } from '@/hooks/use-json-document'
 import { useTranslation } from '@/i18n'
+import type { TranslationKey } from '@/i18n'
 import { EDITOR_SIZE_LIMIT_BYTES } from '@/lib/big-file'
 import { formatJson, minifyJson, type IndentOption } from '@/lib/format-json'
 import { computeJsonStats } from '@/lib/json-stats'
+import { detectFormat, parseByFormat } from '@/lib/parsers'
+import { repairJson } from '@/lib/repair-json'
 import { sortJsonKeysDeep } from '@/lib/sort-json-keys'
-import { validateJson } from '@/lib/validate-json'
+import { validateJson, type JsonValidationResult } from '@/lib/validate-json'
+import type { JsonValue } from '@/types/json'
 
 const VALIDATION_DEBOUNCE_MS = 300
 
@@ -84,13 +88,44 @@ export function useJsonInputState({
     input.click()
   }
 
-  function currentParsedOrToast(): ReturnType<typeof validateJson> | undefined {
-    const result = validateJson(value, softMode, locale)
-    if (!result.valid || result.value === undefined) {
-      toast.error(t('jsonInput.formatError'))
+  /** Auto-decodes text that isn't JSON-shaped at all (a JWT, base64, an escaped JSON string, a
+   *  log line with embedded JSON, ...) the same way Parse would, via the same format detector. */
+  function tryAutoDecode(text: string): { value: JsonValue; format: string } | undefined {
+    if (text.trim() === '') return undefined
+    const format = detectFormat(text)
+    // 'json5' just means "looks JSON-shaped" -- already covered by the plain/repair attempts.
+    if (format === 'json5') return undefined
+    try {
+      return { value: parseByFormat(text, format), format }
+    } catch {
       return undefined
     }
-    return result
+  }
+
+  /** The parsed value behind the current text, trying progressively more lenient strategies:
+   *  plain/soft-mode JSON, then repairing common breakage (unterminated strings/structures,
+   *  trailing garbage, comments), then -- if the text isn't JSON-shaped at all -- auto-decoding
+   *  it as another known format. Surfaces which strategy actually worked via a toast, since
+   *  silently "fixing" pasted-in text without saying so would be surprising. */
+  function currentParsedOrToast(): JsonValidationResult | undefined {
+    const direct = validateJson(value, softMode, locale)
+    if (direct.valid && direct.value !== undefined) return direct
+
+    const repaired = repairJson(value)
+    if (repaired !== undefined) {
+      toast.message(t('jsonInput.repaired'))
+      return { valid: true, value: repaired }
+    }
+
+    const decoded = tryAutoDecode(value)
+    if (decoded !== undefined) {
+      const formatLabel = t(`parse.format.${decoded.format}` as TranslationKey)
+      toast.message(t('jsonInput.autoDecoded', { format: formatLabel }))
+      return { valid: true, value: decoded.value }
+    }
+
+    toast.error(t('jsonInput.formatError'))
+    return undefined
   }
 
   function handleFormat() {
