@@ -66,6 +66,20 @@ function scanTracked(text: string): { body: string; openStack: Opener[]; frames:
     }
   }
 
+  // Shared by both the normal in-loop close (found the matching quote) and the EOF fallback
+  // below (ran out of text while still inString) -- either way, `body` already ends with the
+  // string's closing quote by the time this runs, so `body.slice(stringStart)` is the complete
+  // token in both cases.
+  function handleStringClosed() {
+    const f = topFrame()
+    if (f?.type === 'object' && f.keyState === 'expecting') {
+      f.keyState = 'has-key-no-colon'
+      f.currentKey = safeUnescapeJsonString(body.slice(stringStart))
+    } else {
+      completeCurrentSlot()
+    }
+  }
+
   while (i < n) {
     const ch = text[i]!
 
@@ -77,13 +91,7 @@ function scanTracked(text: string): { body: string; openStack: Opener[]; frames:
         escaped = true
       } else if (ch === quote) {
         inString = false
-        const f = topFrame()
-        if (f?.type === 'object' && f.keyState === 'expecting') {
-          f.keyState = 'has-key-no-colon'
-          f.currentKey = safeUnescapeJsonString(body.slice(stringStart))
-        } else {
-          completeCurrentSlot()
-        }
+        handleStringClosed()
         if (openStack.length === 0) return { body, openStack, frames }
       }
       i++
@@ -161,7 +169,10 @@ function scanTracked(text: string): { body: string; openStack: Opener[]; frames:
     i++
   }
 
-  if (inString) body += quote
+  if (inString) {
+    body += quote
+    handleStringClosed()
+  }
   return { body, openStack, frames }
 }
 
